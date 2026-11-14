@@ -10,7 +10,8 @@ function byTime(a: Reading, b: Reading): number {
 // One person's valid non-preflight readings of one indicator, oldest first: mission day, then takenAt, then position in history.
 // `extra` (a reading being judged that is not in history) is placed after everything already logged.
 export function inFlightSeries(history: readonly Reading[], astronautId: string, indicator: Indicator, extra?: Reading): Reading[] {
-  const all = extra && !history.includes(extra) ? [...history, extra] : history;
+  // Matched by id, not object identity: a copy of a logged reading (from state or JSON) must not become its own predecessor.
+  const all = extra && !history.some((r) => r.id === extra.id) ? [...history, extra] : history;
   return all
     .map((r, i) => ({ r, i }))
     .filter(({ r }) => r.astronautId === astronautId && r.indicator === indicator && r.phase !== "preflight" && Number.isFinite(r.value))
@@ -20,6 +21,6 @@ export function inFlightSeries(history: readonly Reading[], astronautId: string,
 
 export function previousReading(history: readonly Reading[], reading: Reading): Reading | undefined {
   const series = inFlightSeries(history, reading.astronautId, reading.indicator, reading);
-  const at = series.indexOf(reading);
+  const at = series.findIndex((r) => r.id === reading.id);
   return at > 0 ? series[at - 1] : undefined;
 }

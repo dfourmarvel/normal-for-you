@@ -22,10 +22,9 @@ const T_TABLE: readonly (readonly [number, number, number])[] = [
   [10, 1.812, 2.228], [12, 1.782, 2.179], [15, 1.753, 2.131], [20, 1.725, 2.086], [30, 1.697, 2.042],
 ];
 
-// Between table entries the next lower df is used: a wider, conservative band.
+// Between table entries, and above df 30, the next lower df is used: a wider, conservative band.
 export function tFor(df: number, dir: BadDirection): number {
   if (df < T_TABLE[0][0]) throw new Error(`t table starts at df ${T_TABLE[0][0]}, got ${df}`);
-  if (df > T_TABLE[T_TABLE.length - 1][0]) return zFor(dir);
   const row = T_TABLE.filter(([d]) => d <= df).at(-1) ?? T_TABLE[0];
   return dir === "both" ? row[2] : row[1];
 }

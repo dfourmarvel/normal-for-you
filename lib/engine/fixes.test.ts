@@ -5,8 +5,9 @@ import { evaluate, rcvLogNormal, regionStatus, statusFor, tFor } from "./index";
 
 const SRC = "test fixture";
 const A = "A";
+let seq = 0;
 const mk = (indicator: Indicator, missionDay: number, value: number, phase?: Phase): Reading => ({
-  id: `${indicator}-${missionDay}`, astronautId: A, indicator, value, unit: "u", takenAt: "",
+  id: `${indicator}-${missionDay}-${seq++}`, astronautId: A, indicator, value, unit: "u", takenAt: "",
   missionDay, phase: phase ?? (missionDay < 0 ? "preflight" : "cruise"), source: "simulated",
 });
 const pre = (indicator: Indicator, value = 100, n = 3): Reading[] => Array.from({ length: n }, (_, i) => mk(indicator, -30 + i, value));
@@ -86,7 +87,7 @@ describe("fix 4: own pre-flight SD band (Coskun 2022 model 2)", () => {
   it("uses the standard t table, next lower df between entries, Z above df 30", () => {
     expect([tFor(4, "down"), tFor(4, "both")]).toEqual([2.132, 2.776]);
     expect([tFor(11, "up"), tFor(11, "both")]).toEqual([1.812, 2.228]);
-    expect([tFor(30, "down"), tFor(31, "down"), tFor(31, "both")]).toEqual([1.697, 1.645, 1.96]);
+    expect([tFor(30, "down"), tFor(31, "down"), tFor(91, "both")]).toEqual([1.697, 1.697, 2.042]);
   });
 
   it("band = mean ± t × s × √((n+1)/n), one-sided for a named bad direction", () => {
@@ -189,5 +190,21 @@ describe("fix 7: kept behaviour", () => {
     const r = statusFor(A, "lymphAbs", h, cruise, lymphTables);
     expect(r.verdict?.reading).toBe(h[4]);
     expect(r.status).toBe("nominal");
+  });
+});
+
+describe("review fixes after the second verification", () => {
+  it("a copy of a logged reading is not its own previous reading (no false act)", () => {
+    const bad = mk("lymphAbs", 10, 60);
+    const h = [...pre("lymphAbs"), bad];
+    expect(evaluate({ ...bad }, h, cruise, lymphTables).answers[1].status).toBe("watch");
+  });
+
+  it("above 30 df the df-30 t row is used, not Z", () => {
+    const preflight = Array.from({ length: 32 }, (_, i) => mk("sleepHours", -60 + i, i % 2 ? 7.5 : 6.5));
+    expect(preflight.every((r) => r.phase === "preflight")).toBe(true);
+    const h = [...preflight, mk("sleepHours", 10, 6.14)];
+    const t = tables({ variation: [own("sleepHours", "down")] });
+    expect(evaluate(h[32], h, cruise, t).answers[1].status).toBe("nominal");
   });
 });

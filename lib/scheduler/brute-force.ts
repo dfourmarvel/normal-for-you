@@ -28,7 +28,6 @@ export function solveBruteForce(model: QuboModel, maxVariables = 20): BruteForce
 export function assignmentsFromBits(model: QuboModel, bits: Uint8Array): Assignment[] {
   return model.variables.flatMap((v, i) => {
     if (!bits[i]) return [];
-    const { key: _key, ...assignment } = v;
-    return [assignment];
-  });
+    const { crewId, day, slot, machine } = v;
+    return [{ crewId, day, slot, machine }];  });
 }

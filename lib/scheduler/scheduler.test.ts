@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { createSixteenVariableFixture } from "./fixtures";
 import { assignmentsFromBits, solveBruteForce } from "./brute-force";
 import { evaluateQubo } from "./qubo";
@@ -27,11 +28,14 @@ export function runSchedulerSelfTests(): {
 
   let rejectedLargeModel = false;
   try {
-    solveBruteForce({
+    solveBruteForce(
+    {
       ...fixture,
-      variables: [...fixture.variables, { ...fixture.variables[0], key: "extra" }],
-      linear: [...fixture.linear, 0],
-    });
+       variables: [...fixture.variables, { ...fixture.variables[0], key: "extra" }],
+       linear: [...fixture.linear, 0],
+   },
+    fixture.variables.length
+);
   } catch {
     rejectedLargeModel = true;
   }
@@ -58,3 +62,8 @@ export function runSchedulerSelfTests(): {
     fallbackHardBreaks: hardBreaks,
   };
 }
+describe("Scheduler", () => {
+  it("passes all scheduler self-tests", () => {
+    expect(() => runSchedulerSelfTests()).not.toThrow();
+  });
+});

@@ -1,13 +1,7 @@
 import { defineConfig } from "vitest/config";
-import path from "path";
+import path from "node:path";
 
 export default defineConfig({
-  test: {
-    globals: true,
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./"),
-    },
-  },
+  resolve: { alias: { "@": path.resolve(__dirname) } },
+  test: { environment: "node", include: ["**/*.test.ts"], exclude: ["node_modules/**", ".next/**", "out/**", ".foreman/**"] },
 });

@@ -1,9 +1,17 @@
 // © EFLM, not covered by this repo's licence, used with citation, permission requested
-import type { VariationRow } from "@/lib/data/tables";
+import type { BadDirection, VariationRow } from "@/lib/data/tables";
+import type { Indicator } from "@/lib/types";
+
+const OWN_SD_SOURCE = "Personal band from own pre-flight SD: Coskun et al. 2022 model 2 (own variance, ≥5 results), 01a";
+
+// No usable published within-person CV (01a Table 2: SpO2 and temperature should not use a CV; the rest by science lead decision).
+const ownSD = (indicator: Indicator, badDirection: BadDirection, directionSource: string): VariationRow =>
+  ({ method: "ownSD", indicator, badDirection, directionSource, source: OWN_SD_SOURCE });
 
 export const variation: VariationRow[] = [
   {
     indicator: "lymphAbs",
+    method: "populationCV",
     cviPct: 10.9,
     cvaPct: 5.45,
     badDirection: "down",
@@ -15,6 +23,7 @@ export const variation: VariationRow[] = [
   },
   {
     indicator: "neutAbs",
+    method: "populationCV",
     cviPct: 14.6,
     cvaPct: 7.3,
     badDirection: "both",
@@ -25,6 +34,7 @@ export const variation: VariationRow[] = [
   },
   {
     indicator: "wbc",
+    method: "populationCV",
     cviPct: 11.1,
     cvaPct: 5.6,
     badDirection: "both",
@@ -35,6 +45,7 @@ export const variation: VariationRow[] = [
   },
   {
     indicator: "hb",
+    method: "populationCV",
     cviPct: 2.7,
     cvaPct: 1.4,
     badDirection: "both",
@@ -45,6 +56,7 @@ export const variation: VariationRow[] = [
   },
   {
     indicator: "plt",
+    method: "populationCV",
     cviPct: 7.2,
     cvaPct: 3.6,
     badDirection: "both",
@@ -55,6 +67,7 @@ export const variation: VariationRow[] = [
   },
   {
     indicator: "glucose",
+    method: "populationCV",
     cviPct: 4.9,
     cvaPct: 2.45,
     badDirection: "both",
@@ -66,6 +79,7 @@ export const variation: VariationRow[] = [
   },
   {
     indicator: "restingHR",
+    method: "populationCV",
     cviPct: 4.6,
     cvaPct: 0,
     badDirection: "both",
@@ -77,6 +91,7 @@ export const variation: VariationRow[] = [
   },
   {
     indicator: "sbp",
+    method: "populationCV",
     cviPct: 8.6,
     cvaPct: 0,
     badDirection: "both",
@@ -88,6 +103,7 @@ export const variation: VariationRow[] = [
   },
   {
     indicator: "dbp",
+    method: "populationCV",
     cviPct: 8.6,
     cvaPct: 0,
     badDirection: "both",
@@ -97,4 +113,12 @@ export const variation: VariationRow[] = [
     source:
       "Warren et al. 2010, Br J Gen Pract: single office readings 6 weeks apart, 163 adults; device error included, so CVA 0 (01a Table 2)",
   },
+  ownSD("spo2", "down", "BTS oxygen guideline 2017: any sudden fall of more than 3% needs assessment (01d §1–2)"),
+  ownSD("tempC", "both", "Both directions clinically bad: fever ≥38.0 °C (CDC) and low ≤35.0 °C (NEWS2 score 3) (01d §1–2)"),
+  ownSD("sleepHours", "down", "AASM/SRS 2015: under 7 h regularly is linked to harm (01d §1)"),
+  ownSD("fatigueSP", "up", "Scale definition: higher = worse"),
+  ownSD("moodPHQ2", "up", "Scale definition: higher = worse"),
+  ownSD("pvtLapses", "up", "Scale definition: higher = worse"),
+  ownSD("bodyMass", "both", "No risky direction named in advance in 01b or 01d: two-sided"),
+  ownSD("hrvRMSSD", "both", "No risky direction named in the science pack (01b: no clear in-flight HRV evidence; 01d: no population range): two-sided"),
 ];

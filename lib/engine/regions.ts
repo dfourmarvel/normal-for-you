@@ -1,9 +1,10 @@
 import type { Tables } from "@/lib/data/tables";
 import type { Indicator, Reading, Region, RegionStatus, Status, Verdict } from "@/lib/types";
-import type { EvalCtx } from "./answers";
-import { evaluate, worst } from "./evaluate";
+import type { EvalCtx, TodayResult } from "./answers";
+import { evaluateDetailed, worst } from "./evaluate";
 import { capitalize, fmtNum, INDICATOR_LABEL } from "./format";
 import { isBadDirection } from "./rcv";
+import { inFlightSeries } from "./series";
 
 export const REGION_MEMBERS: Record<Region, Indicator[]> = {
   heart: ["restingHR", "sbp", "dbp", "spo2", "hrvRMSSD"],
@@ -14,20 +15,17 @@ export const REGION_MEMBERS: Record<Region, Indicator[]> = {
   environment: ["co2", "radDose"],
 };
 
-export interface StatusResult { status: Status; reason?: string; verdict?: Verdict }
+export interface StatusResult { status: Status; reason?: string; verdict?: Verdict; today?: TodayResult }
 
 export function statusFor(
   astronautId: string, indicator: Indicator, history: readonly Reading[], ctx: EvalCtx, tables: Tables, maxAgeDays = 7,
 ): StatusResult {
-  let latest: Reading | undefined;
-  for (const r of history) {
-    if (r.astronautId !== astronautId || r.indicator !== indicator || r.phase === "preflight") continue;
-    if (!Number.isFinite(r.value) || r.missionDay > ctx.missionDay || r.missionDay <= ctx.missionDay - maxAgeDays) continue;
-    if (!latest || r.missionDay > latest.missionDay) latest = r;
-  }
+  const latest = inFlightSeries(history, astronautId, indicator)
+    .filter((r) => r.missionDay <= ctx.missionDay && r.missionDay > ctx.missionDay - maxAgeDays)
+    .at(-1);
   if (!latest) return { status: "notMeasured", reason: `No ${INDICATOR_LABEL[indicator]} reading for ${maxAgeDays} days` };
-  const verdict = evaluate(latest, history, ctx, tables);
-  return { status: verdict.overall, verdict };
+  const { verdict, today } = evaluateDetailed(latest, history, ctx, tables);
+  return { status: verdict.overall, verdict, today };
 }
 
 const COMBINED_DRIFT_MIN = 3;
@@ -55,9 +53,10 @@ export function regionStatus(region: Region, astronautId: string, history: reado
     if (res.status !== "nominal") reasons.push(`${capitalize(label)}: ${res.verdict.action.saw || res.status}`);
 
     // The you-answer carries changePct and the RCV on the side the change went, so half-RCV is |rcvPct| / 2.
+    // A change the phase table expects is not drift.
     const you = res.verdict.answers[1];
     const row = tables.variation.find((v) => v.indicator === indicator);
-    if (row && you.changePct !== undefined && you.rcvPct !== undefined
+    if (row && !res.today?.expectedMatch && you.changePct !== undefined && you.rcvPct !== undefined
       && isBadDirection(row.badDirection, you.changePct) && Math.abs(you.changePct) >= Math.abs(you.rcvPct) / 2) {
       drifting.push(`${label} ${you.changePct > 0 ? "+" : "-"}${fmtNum(Math.abs(you.changePct))}%`);
     }

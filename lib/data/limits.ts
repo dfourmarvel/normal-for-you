@@ -23,7 +23,7 @@ export const limits: LimitRow[] = [
   {
     indicator: "radDose",
     limit: 600,
-    breachedWhen: "above",
+    breachedWhen: "atOrAbove",
     unit: "mSv",
     requirementNo: "V1 4030",
     label: "Career effective dose from spaceflight: less than 600 mSv (all ages and sexes)",

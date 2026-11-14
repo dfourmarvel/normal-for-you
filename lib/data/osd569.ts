@@ -87,7 +87,8 @@ export function parseOsd569(csvText: string): { readings: Reading[]; ranges: Ran
   const ranges: RangeRow[] = cols.flatMap((c) => {
     const r = seenRange.get(c.indicator);
     if (!r) return [];
-    const row: RangeRow = { indicator: c.indicator, low: r.min, high: r.max, unit: c.unit, label: `lab range ${fmt(r.min)}–${fmt(r.max)} ${c.unit}`, source: RANGE_SOURCE };
+    // The file's min and max are themselves inside the lab range.
+    const row: RangeRow = { indicator: c.indicator, low: { value: r.min, inclusive: true }, high: { value: r.max, inclusive: true }, unit: c.unit, label: `lab range ${fmt(r.min)}–${fmt(r.max)} ${c.unit}`, source: RANGE_SOURCE };
     if (r.pairs.size > 1) row.note = `The file lists ${r.pairs.size} reference ranges (${[...r.pairs].join(" and ")} ${c.unit}); the widest span is used.`;
     return [row];
   });

@@ -11,7 +11,7 @@ const lymph = readings.filter((r) => r.indicator === "lymphAbs");
 
 const fixture: Tables = {
   variation: [{
-    indicator: "lymphAbs", cviPct: 10.9, cvaPct: 5.45, badDirection: "down",
+    indicator: "lymphAbs", method: "populationCV", cviPct: 10.9, cvaPct: 5.45, badDirection: "down",
     directionSource: "test fixture", status: "unverified", source: "test fixture",
   }],
   ranges,
@@ -45,9 +45,9 @@ describe("parseOsd569", () => {
 
   it("builds one lab-range row per indicator, with haemoglobin in g/dL", () => {
     expect(ranges).toHaveLength(5);
-    expect(ranges.find((r) => r.indicator === "lymphAbs")).toMatchObject({ low: 850, high: 3900, label: "lab range 850–3,900 cells/µL" });
+    expect(ranges.find((r) => r.indicator === "lymphAbs")).toMatchObject({ low: { value: 850, inclusive: true }, high: { value: 3900, inclusive: true }, label: "lab range 850–3,900 cells/µL" });
     const hb = ranges.find((r) => r.indicator === "hb");
-    expect(hb).toMatchObject({ unit: "g/dL", low: 11.7, high: 17.1 });
+    expect(hb).toMatchObject({ unit: "g/dL", low: { value: 11.7, inclusive: true }, high: { value: 17.1, inclusive: true } });
     expect(hb?.note).toContain("2 reference ranges");
     expect(ranges.filter((r) => r.note)).toHaveLength(1);
     expect(ranges.find((r) => r.indicator === "plt")?.unit).toBe("thousand/µL");

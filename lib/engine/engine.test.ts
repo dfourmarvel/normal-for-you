@@ -13,7 +13,7 @@ const pre = (indicator: Indicator, value = 100, n = 3): Reading[] =>
   Array.from({ length: n }, (_, i) => mk(indicator, -30 + i, value));
 
 const variation = (indicator: Indicator, badDirection: VariationRow["badDirection"], cviPct = 10.9, cvaPct = 5.45): VariationRow =>
-  ({ indicator, cviPct, cvaPct, badDirection, directionSource: SRC, status: "unverified", source: SRC });
+  ({ method: "populationCV", indicator, cviPct, cvaPct, badDirection, directionSource: SRC, status: "unverified", source: SRC });
 const tables = (t: Partial<Tables> = {}): Tables => ({ variation: [], ranges: [], limits: [], phases: [], ...t });
 const cruise = { phase: "cruise" as const, missionDay: 10 };
 const lymphTables = tables({ variation: [variation("lymphAbs", "down")] });
@@ -94,7 +94,7 @@ describe("you-answer", () => {
 });
 
 describe("people-answer", () => {
-  const range = { indicator: "hb" as const, low: 13, high: 17, critLow: 7, unit: "g/dL", label: "lab range 13–17 g/dL", source: SRC };
+  const range = { indicator: "hb" as const, low: { value: 13, inclusive: true }, high: { value: 17, inclusive: true }, critLow: { value: 7, inclusive: true }, unit: "g/dL", label: "lab range 13–17 g/dL", source: SRC };
   const run = (value: number, t: Tables) => evaluate(mk("hb", 10, value), [], cruise, t).answers[0];
   it("nominal / watch / act from the range row", () => {
     const t = tables({ ranges: [range] });
@@ -122,7 +122,7 @@ describe("people-answer", () => {
 describe("today-answer and the overall exception", () => {
   const phaseRow = (expected: PhaseRow["expected"], maxChangePct?: number): PhaseRow =>
     ({ phase: "cruise", indicator: "lymphAbs", expected, maxChangePct, note: SRC, source: SRC });
-  const range = { indicator: "lymphAbs" as const, low: 50, high: 3900, unit: "u", label: "lab range", source: SRC };
+  const range = { indicator: "lymphAbs" as const, low: { value: 50, inclusive: true }, high: { value: 3900, inclusive: true }, unit: "u", label: "lab range", source: SRC };
   const h = [...pre("lymphAbs"), mk("lymphAbs", 10, 70)]; // -30%: beyond -24.6
   const run = (t: Tables, hist = h) => evaluate(hist[hist.length - 1], hist, cruise, t);
   const base = { variation: [variation("lymphAbs", "down")], ranges: [range] };
@@ -149,7 +149,7 @@ describe("today-answer and the overall exception", () => {
   });
 
   it("the exception does not apply when the people-answer is watch", () => {
-    const high = { ...range, low: 80 }; // 70 is below this lab range
+    const high = { ...range, low: { value: 80, inclusive: true } }; // 70 is below this lab range
     const v = run(tables({ variation: base.variation, ranges: [high], phases: [phaseRow("down", 40)] }));
     expect(v.answers[0].status).toBe("watch");
     expect(v.answers[2].status).toBe("nominal");

@@ -6,24 +6,36 @@ import type { Indicator, Phase } from "@/lib/types";
 // "both": either direction is bad → two-sided RCV, Z = 1.96.
 export type BadDirection = "up" | "down" | "both";
 
-export interface VariationRow {
+interface VariationBase {
   indicator: Indicator;
-  cviPct: number;          // within-person CV, %
-  cvaPct: number;          // analytical CV, %; 0 when the study's figure already includes device error
   badDirection: BadDirection;
   directionSource: string; // why that direction (citation, or "scale definition: higher = worse")
-  status: "eflm" | "single-study" | "unverified";
   source: string;
 }
 
+// "populationCV": published within-person CV → log-normal RCV against the median of ≥3 pre-flight readings.
+// "ownSD": no usable published CV → the astronaut's own pre-flight SD (Coskun 2022 model 2, 01a), needs ≥5 readings.
+export type VariationRow =
+  | (VariationBase & {
+      method: "populationCV";
+      cviPct: number;      // within-person CV, %
+      cvaPct: number;      // analytical CV, %; 0 when the study's figure already includes device error
+      status: "eflm" | "single-study" | "unverified";
+    })
+  | (VariationBase & { method: "ownSD" });
+
+// An edge stored as the guideline words it: "<120" → { value: 120, inclusive: false }.
+// For low/high, inclusive = the edge value itself is still normal. For critLow/critHigh, inclusive = the edge value itself is act.
+export interface Edge { value: number; inclusive: boolean }
+
 export interface RangeRow {
   indicator: Indicator;
-  low?: number;            // inclusive lower edge of normal
-  high?: number;           // inclusive upper edge of normal
-  critLow?: number;        // at or below → act
-  critHigh?: number;       // at or above → act
+  low?: Edge;
+  high?: Edge;
+  critLow?: Edge;
+  critHigh?: Edge;
   unit: string;
-  label: string;           // shown on screen, e.g. "NEWS2 band 51–90 bpm"
+  label: string;           // shown on screen, e.g. "NEWS2 band 50–90 bpm"
   note?: string;
   source: string;
 }
@@ -31,7 +43,7 @@ export interface RangeRow {
 export interface LimitRow {
   indicator: Indicator;
   limit: number;
-  breachedWhen: "above" | "below";
+  breachedWhen: "above" | "atOrAbove" | "below" | "atOrBelow"; // "no more than 3" → above; "less than 600" → atOrAbove
   unit: string;
   requirementNo: string;   // e.g. "V2 6004"
   label: string;

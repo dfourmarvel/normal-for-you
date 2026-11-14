@@ -17,6 +17,7 @@ const PRIMARY = [
 ];
 
 const MORE = [
+  { href: "/proof", label: "Proof (NASA data)" },
   { href: "/forecasts", label: "Forecasts" },
   { href: "/recommendations", label: "Recommendations" },
   { href: "/scenarios", label: "Scenarios" },

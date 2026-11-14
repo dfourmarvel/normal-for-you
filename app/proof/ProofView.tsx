@@ -7,7 +7,8 @@ import type { Answer, Indicator, Reading, Status } from "@/lib/types";
 import type { Tables } from "@/lib/data/tables";
 import { CrewChart } from "./CrewChart";
 import {
-  MARKERS, buildMarker, changeLabel, correctionSentence, fmtCv, fmtPct, fmtValue, studyShape, summarySentence, type CrewView, type MarkerView,
+  DATA_NOTE_ID, DATA_NOTE_WORDS, MARKERS, buildMarker, changeLabel, closeCall, correctionSentence, dataNoteIntro, fmtCv, fmtPct, fmtValue, preflightDrawsSentence, studyShape,
+  summarySentence, type CrewView, type MarkerView,
 } from "./compute";
 
 type Load =
@@ -96,7 +97,11 @@ export function ProofView() {
             {shape ? `${shape.crew} people, one ${FLIGHT_DAYS}-day flight (Inspiration4), ${shape.draws} draws each.` : `One ${FLIGHT_DAYS}-day flight (Inspiration4).`}{" "}
             This shows the method on real data; it is not a medical finding.
           </li>
-          <li>Personal bands use 3 pre-flight draws; the method papers recommend 5 for a trend check.</li>
+          <li>
+            {view && !(view instanceof Error)
+              ? preflightDrawsSentence(view)
+              : "Personal bands need at least 3 pre-flight draws; the method papers recommend 5 for a trend check."}
+          </li>
           <li className="font-semibold">Screening, not a diagnosis.</li>
         </ul>
       </section>
@@ -129,6 +134,8 @@ function CrewCard({ crew, view, markerName }: { crew: CrewView; view: MarkerView
   const first = crew.post[0];
   const [people, you] = first ? first.verdict.answers : [undefined, undefined];
   const when = first?.label === "R+1" ? "Day after landing (R+1)" : `First draw after landing (${first?.label ?? "none"})`;
+  const close = you ? closeCall(you) : null;
+  const [noteBefore, noteAfter] = crew.baseNote?.split(DATA_NOTE_WORDS) ?? [];
   return (
     <article className="rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
       <h3 className="text-lg font-semibold">Crew {crew.id}</h3>
@@ -136,17 +143,28 @@ function CrewCard({ crew, view, markerName }: { crew: CrewView; view: MarkerView
         <div>
           <dt className="text-secondary">Baseline (median of pre-flight draws)</dt>
           <dd className="mt-0.5 text-base font-semibold">
-            {crew.base === null ? "Not enough pre-flight draws" : <span className="whitespace-nowrap">{fmtValue(crew.base)} {crew.unit}</span>}
+            {crew.base !== null ? (
+              <span className="whitespace-nowrap">{fmtValue(crew.base)} {crew.unit}</span>
+            ) : noteAfter !== undefined ? (
+              <>
+                {noteBefore}
+                <a href={`#${DATA_NOTE_ID}`} className="underline underline-offset-2 hover:text-chip-act">{DATA_NOTE_WORDS}</a>
+                {noteAfter}
+              </>
+            ) : (
+              "Not enough pre-flight draws"
+            )}
           </dd>
         </div>
         <div>
           <dt className="text-secondary">{when}</dt>
           <dd className="mt-0.5 text-base font-semibold">
             {first ? <span className="whitespace-nowrap">{fmtValue(first.verdict.reading.value)} {crew.unit}</span> : "No post-flight draw"}
-            {you?.changePct !== undefined && <span className="ml-1.5 inline-block font-medium text-secondary">({fmtPct(you.changePct)})</span>}
+            {you?.changePct !== undefined && <span className="ml-1.5 inline-block font-medium text-secondary">({fmtPct(you.changePct, close ? 1 : 0)})</span>}
           </dd>
         </div>
       </dl>
+      {close && <p className="mt-3 text-sm font-medium">{close}</p>}
       {people && you && (
         <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
           <AnswerBox question="Normal for people?" answer={people} />
@@ -159,13 +177,10 @@ function CrewCard({ crew, view, markerName }: { crew: CrewView; view: MarkerView
 }
 
 function DataNote({ corrections }: { corrections: Correction[] }) {
-  const n = corrections.length;
   return (
-    <section aria-labelledby="data-note" className="mt-4 max-w-2xl rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
+    <section id={DATA_NOTE_ID} aria-labelledby="data-note" className="mt-4 max-w-2xl scroll-mt-4 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
       <SectionLabel id="data-note">Data note</SectionLabel>
-      <p className="mt-2 text-sm">
-        {n === 1 ? "One row" : `${n} rows`} in NASA&apos;s file {n === 1 ? "has" : "have"} cell counts in the wrong columns. Charts mark rebuilt points with a hollow dot.
-      </p>
+      <p className="mt-2 text-sm">{dataNoteIntro(corrections)}</p>
       {corrections.map((c) => (
         <div key={c.sample} className="mt-3">
           <p className="text-sm">{correctionSentence(c)}</p>

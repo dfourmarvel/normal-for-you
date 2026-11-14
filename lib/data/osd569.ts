@@ -33,7 +33,8 @@ export interface CorrectionChange {
   usedValue: number | null; // null: left out
   reason: string;
 }
-export interface Correction { sample: string; astronautId: string; draw: string; changes: CorrectionChange[] }
+/** shifted: cells in the wrong columns, rebuilt from percent × WBC. unverifiable: the row can't be checked, so its white-cell values are left out. */
+export interface Correction { sample: string; astronautId: string; draw: string; kind: "shifted" | "unverifiable"; changes: CorrectionChange[] }
 export interface Osd569 { readings: Reading[]; ranges: RangeRow[]; corrections: Correction[] }
 
 // A file count further than this from percent × WBC is a mismatch; the file's own rounding is a cell or two.
@@ -110,36 +111,60 @@ export function parseOsd569(csvText: string): Osd569 {
       return { ...d, file, pct, expected, off: file !== undefined && expected !== undefined && isMismatch(file, expected) };
     });
 
-    // One mismatch marks the row as column-shifted: rebuild the differential, leave out what can't be rebuilt.
     const override = new Map<Indicator, number | null>();
-    if (diff.some((d) => d.off)) {
-      const changes: CorrectionChange[] = [];
-      for (const d of diff) {
-        if (!d.indicator) continue;
-        const used = d.expected === undefined ? null : Math.round(d.expected);
-        override.set(d.indicator, used);
-        const file = d.file;
-        const holder = file === undefined ? undefined : diff.find((o) => o !== d && o.expected !== undefined && isSame(file, o.expected));
-        const found = file === undefined
-          ? `The file's ${d.name} cell is empty.`
-          : holder
-            ? `The file's ${d.name} cell holds the ${holder.name} count (${holder.pct}% × ${wbc}).`
-            : `The file's ${d.name} cell (${fmt(file)}) matches no white-cell count in the row.`;
-        const rebuilt = used === null
-          ? "It has no percentage to rebuild it from, so it is left out."
-          : `Rebuilt as ${d.pct}% × ${wbc} thousand/µL = ${fmt(used)} cells/µL.`;
-        changes.push({ indicator: d.indicator, fileValue: file ?? null, usedValue: used, reason: `${found} ${rebuilt}` });
-      }
-      if (pltCol) {
-        override.set("plt", null);
-        changes.push({
-          indicator: "plt",
-          fileValue: toNumber(cells[pltCol.value], `${sample} platelet_count`) ?? null,
-          usedValue: null,
-          reason: "The platelet cell is in the shifted row and has no percentage to rebuild it from, so it is left out.",
+    const leaveOut = (why: string, indicators: Indicator[]) => {
+      const changes = cols
+        .filter((c) => indicators.includes(c.indicator))
+        .map((c): CorrectionChange => {
+          override.set(c.indicator, null);
+          return { indicator: c.indicator, fileValue: toNumber(cells[c.value], `${sample} ${c.prefix}`) ?? null, usedValue: null, reason: `${why} It is left out.` };
         });
+      corrections.push({ sample, astronautId: meta.astronautId, draw, kind: "unverifiable", changes });
+    };
+
+    if (wbc === undefined && diff.some((d) => d.file !== undefined || d.pct !== undefined)) {
+      // Nothing to check the absolute counts against; platelets and haemoglobin are not part of this check.
+      leaveOut("The total white count is blank, so the white-cell counts in this row can't be checked.", ["lymphAbs", "neutAbs"]);
+    } else if (diff.some((d) => d.off)) {
+      // One mismatch marks the row as column-shifted. Rebuild only if the WBC itself is trustworthy:
+      // the percentages must add up to 100, and most file cells must be some percent × WBC (just in another column).
+      const pctSum = diff.reduce((sum, d) => sum + (d.pct ?? 0), 0);
+      const matching = diff.filter((d) => d.file !== undefined && diff.some((o) => o.expected !== undefined && isSame(d.file as number, o.expected))).length;
+      const failed = [
+        Math.abs(pctSum - 100) > 0.5 && `The five percentages add up to ${Math.round(pctSum * 10) / 10}, not 100.`,
+        matching < 3 && `Only ${matching} of the 5 count cells match a percentage × the total white count (${wbc} thousand/µL); at least 3 must.`,
+      ].filter(Boolean);
+      if (failed.length > 0) {
+        leaveOut(`${failed.join(" ")} So the total white count can't be trusted and the row can't be rebuilt.`, ["lymphAbs", "neutAbs", "wbc", "plt"]);
+      } else {
+        const changes: CorrectionChange[] = [];
+        for (const d of diff) {
+          if (!d.indicator) continue;
+          const used = d.expected === undefined ? null : Math.round(d.expected);
+          override.set(d.indicator, used);
+          const file = d.file;
+          const holder = file === undefined ? undefined : diff.find((o) => o !== d && o.expected !== undefined && isSame(file, o.expected));
+          const found = file === undefined
+            ? `The file's ${d.name} cell is empty.`
+            : holder
+              ? `The file's ${d.name} cell holds the ${holder.name} count (${holder.pct}% × ${wbc}).`
+              : `The file's ${d.name} cell (${fmt(file)}) matches no white-cell count in the row.`;
+          const rebuilt = used === null
+            ? "It has no percentage to rebuild it from, so it is left out."
+            : `Rebuilt as ${d.pct}% × ${wbc} thousand/µL = ${fmt(used)} cells/µL.`;
+          changes.push({ indicator: d.indicator, fileValue: file ?? null, usedValue: used, reason: `${found} ${rebuilt}` });
+        }
+        if (pltCol) {
+          override.set("plt", null);
+          changes.push({
+            indicator: "plt",
+            fileValue: toNumber(cells[pltCol.value], `${sample} platelet_count`) ?? null,
+            usedValue: null,
+            reason: "The platelet cell is in the shifted row and has no percentage to rebuild it from, so it is left out.",
+          });
+        }
+        corrections.push({ sample, astronautId: meta.astronautId, draw, kind: "shifted", changes });
       }
-      corrections.push({ sample, astronautId: meta.astronautId, draw, changes });
     }
 
     for (const c of cols) {

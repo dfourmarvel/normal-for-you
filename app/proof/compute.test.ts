@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { parseOsd569 } from "@/lib/data/osd569";
 import { defaultTables, withLabRanges } from "@/lib/engine";
 import type { Indicator } from "@/lib/types";
-import { MARKERS, buildMarker, correctionSentence, describeDraw, studyShape, summarySentence } from "./compute";
+import { MARKERS, buildMarker, closeCall, correctionSentence, dataNoteIntro, describeDraw, preflightDrawsSentence, studyShape, summarySentence } from "./compute";
 
 const csv = readFileSync(path.resolve(__dirname, "../../public/data/LSDS-7_Complete_Blood_Count_CBC_TRANSFORMED.csv"), "utf-8");
 const { readings, ranges, corrections } = parseOsd569(csv);
@@ -72,6 +72,46 @@ describe("proof summary on the real OSD-569 file", () => {
     expect(describeDraw("R+1")).toBe("1 day after landing");
     expect(correctionSentence(corrections[0])).toBe(
       "Crew C003, 92 days before launch (L-92): its white-cell counts don't match its own percentages × total white count, so its cells are in the wrong columns. We rebuilt lymphocytes and neutrophils from the percentages and total white count in the same row, and left out platelets, which can't be rebuilt. Its other values are used as filed.",
+    );
+  });
+});
+
+describe("honest wording on the proof page", () => {
+  const firstYou = (indicator: Indicator, id: string) => view(indicator).crew.find((c) => c.id === id)?.post[0].verdict.answers[1] ?? {};
+
+  it("close call: C003 neutrophils, 0.1 points inside the band (real file)", () => {
+    expect(closeCall(firstYou("neutAbs", "C003"))).toBe("Close call: −36.2% against a limit of −36.3%, 0.1 points inside the band.");
+  });
+
+  it("close call: just past the limit, and not a close call when far or unknown", () => {
+    expect(closeCall({ changePct: -36.9, rcvPct: -36.3 })).toBe("Close call: −36.9% against a limit of −36.3%, 0.6 points past the limit.");
+    expect(closeCall({ changePct: 40.5, rcvPct: 41.2 })).toBe("Close call: +40.5% against a limit of +41.2%, 0.7 points inside the band.");
+    expect(closeCall({ changePct: -20, rcvPct: -36.3 })).toBeNull();
+    expect(closeCall({ changePct: -37.4, rcvPct: -36.3 })).toBeNull();
+    expect(closeCall({ changePct: -20 })).toBeNull();
+  });
+
+  it("dropped draw: C003 platelets say which draw was left out; nobody else gets a note", () => {
+    const note = "Not enough pre-flight draws: the L-92 draw was left out (see the data note)";
+    expect(view("plt").crew.map((c) => [c.id, c.baseNote])).toEqual([["C001", undefined], ["C002", undefined], ["C003", note], ["C004", undefined]]);
+    expect(view("lymphAbs").crew.every((c) => c.baseNote === undefined)).toBe(true);
+  });
+
+  it("pre-flight draw counts come from the data for the selected marker", () => {
+    expect(preflightDrawsSentence(view("plt"))).toBe(
+      "Personal bands use 3 pre-flight draws each (C003: 2, too few for a band); the method papers recommend 5 for a trend check.",
+    );
+    expect(preflightDrawsSentence(view("lymphAbs"))).toBe("Personal bands use 3 pre-flight draws each; the method papers recommend 5 for a trend check.");
+  });
+
+  it("data note words each kind of row correctly", () => {
+    const unverifiable = { ...corrections[0], kind: "unverifiable" as const, changes: corrections[0].changes.filter((ch) => ch.usedValue === null) };
+    expect(dataNoteIntro(corrections)).toBe("One row in NASA's file has cell counts in the wrong columns. Charts mark rebuilt points with a hollow dot.");
+    expect(dataNoteIntro([unverifiable])).toBe("One row in NASA's file can't be checked against its own white-cell totals, so its white-cell values are left out.");
+    expect(dataNoteIntro([...corrections, unverifiable])).toContain("can't be checked");
+    expect(dataNoteIntro([...corrections, unverifiable])).toContain("wrong columns");
+    expect(correctionSentence(unverifiable)).toBe(
+      "Crew C003, 92 days before launch (L-92): its white-cell counts can't be checked against its own percentages and total white count. We left out platelets. Its other values are used as filed.",
     );
   });
 });

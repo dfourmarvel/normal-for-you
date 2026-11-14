@@ -1,8 +1,12 @@
 import type { Correction } from "@/lib/data/osd569";
 import type { RangeRow, Tables } from "@/lib/data/tables";
 import { baseline, evaluate, rcvForRow, zFor, type PopulationCvRow } from "@/lib/engine";
+import { MIN_BASELINE_READINGS } from "@/lib/engine/baseline";
 import { INDICATOR_LABEL, capitalize } from "@/lib/engine/format";
-import type { Indicator, Reading, Verdict } from "@/lib/types";
+import type { Answer, Indicator, Reading, Verdict } from "@/lib/types";
+
+export const DATA_NOTE_ID = "data-note-section";
+export const DATA_NOTE_WORDS = "data note"; // the page turns these words into a link to DATA_NOTE_ID
 
 export const MARKERS: { indicator: Indicator; label: string }[] = [
   { indicator: "lymphAbs", label: "Lymphocytes" },
@@ -20,6 +24,8 @@ export interface CrewView {
   draws: Draw[];
   base: number | null;
   band?: { low: number; high: number };
+  /** Why there is no baseline, when a pre-flight draw was left out of the file's data. */
+  baseNote?: string;
   post: { label: string; verdict: Verdict }[];
 }
 
@@ -73,6 +79,7 @@ export function buildMarker(indicator: Indicator, readings: readonly Reading[], 
       draws: history.map((r) => ({ label: drawLabel(r), missionDay: r.missionDay, value: r.value, phase: r.phase, rebuilt: rebuiltIds.has(r.id) })),
       base,
       band: base === null ? undefined : { low: base * (1 + rcv.downPct / 100), high: base * (1 + rcv.upPct / 100) },
+      baseNote: base === null ? droppedBaselineText(corrections, id, indicator) ?? undefined : undefined,
       post,
     };
   });
@@ -145,11 +152,53 @@ export function describeDraw(draw: string): string {
 
 const listOf = (xs: string[]): string => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
 
+/** Says why a crew member has no baseline when pre-flight draws of this marker were left out of the file's data; null otherwise. */
+export function droppedBaselineText(corrections: readonly Correction[], crewId: string, indicator: Indicator): string | null {
+  const draws = corrections
+    .filter((c) => c.astronautId === crewId && c.draw.startsWith("L") && c.changes.some((ch) => ch.indicator === indicator && ch.usedValue === null))
+    .map((c) => c.draw);
+  if (draws.length === 0) return null;
+  return `Not enough pre-flight draws: the ${listOf(draws)} ${draws.length === 1 ? "draw was" : "draws were"} left out (see the ${DATA_NOTE_WORDS})`;
+}
+
+/** The "honest limits" line about how many pre-flight draws each personal band rests on, counted from the data. */
+export function preflightDrawsSentence(m: MarkerView): string {
+  const counts = m.crew.map((c) => ({ id: c.id, n: c.draws.filter((d) => d.phase === "preflight").length }));
+  const most = Math.max(...counts.map((c) => c.n));
+  const fewer = counts.filter((c) => c.n !== most);
+  const note = fewer.length
+    ? ` (${fewer.map((c) => `${c.id}: ${c.n}`).join(", ")}${fewer.some((c) => c.n < MIN_BASELINE_READINGS) ? ", too few for a band" : ""})`
+    : "";
+  return `Personal bands use ${most} pre-flight draws each${note}; the method papers recommend 5 for a trend check.`;
+}
+
+/** A plain line when the first post-flight change sits within 1 percentage point of its limit, either side; null otherwise. */
+export function closeCall({ changePct, rcvPct }: Pick<Answer, "changePct" | "rcvPct">): string | null {
+  if (changePct === undefined || rcvPct === undefined || Math.abs(changePct - rcvPct) >= 1) return null;
+  const gap = Math.abs(Number(changePct.toFixed(1)) - Number(rcvPct.toFixed(1))).toFixed(1);
+  const inside = Math.abs(changePct) <= Math.abs(rcvPct);
+  return `Close call: ${fmtPct(changePct, 1)} against a limit of ${fmtPct(rcvPct, 1)}, ${gap} points ${inside ? "inside the band" : "past the limit"}.`;
+}
+
+/** The data-note opening, worded for the kinds of corrected rows present. */
+export function dataNoteIntro(corrections: readonly Correction[]): string {
+  const shifted = corrections.filter((c) => c.kind === "shifted").length;
+  const unverifiable = corrections.length - shifted;
+  const rows = (n: number) => (n === 1 ? "One row" : `${n} rows`);
+  return [
+    shifted > 0 && `${rows(shifted)} in NASA's file ${shifted === 1 ? "has" : "have"} cell counts in the wrong columns. Charts mark rebuilt points with a hollow dot.`,
+    unverifiable > 0 && `${rows(unverifiable)} in NASA's file can't be checked against its own white-cell totals, so ${unverifiable === 1 ? "its" : "their"} white-cell values are left out.`,
+  ].filter(Boolean).join(" ");
+}
+
 /** One plain sentence per corrected row, built from what the parser changed. */
 export function correctionSentence(c: Correction): string {
   const names = (keep: boolean) => listOf(c.changes.filter((ch) => (ch.usedValue !== null) === keep).map((ch) => INDICATOR_LABEL[ch.indicator]));
   const rebuilt = names(true);
   const dropped = names(false);
+  if (c.kind === "unverifiable") {
+    return `Crew ${c.astronautId}, ${describeDraw(c.draw)} (${c.draw}): its white-cell counts can't be checked against its own percentages and total white count. We left out ${dropped}. Its other values are used as filed.`;
+  }
   const parts = [
     rebuilt && `rebuilt ${rebuilt} from the percentages and total white count in the same row`,
     dropped && `left out ${dropped}, which can't be rebuilt`,

@@ -1,24 +1,32 @@
+import Link from "next/link";
 import { Card } from "@/components/shared/Card";
 
-export function EntropyPanel({ value = 0.62 }: { value?: number }) {
-  const pct = Math.round(value * 100);
+// The simulated crew have no beat-to-beat heart data, so this panel never shows a number.
+export function EntropyPanel() {
   return (
-    <Card className="relative overflow-hidden">
-      <span className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide bg-yellow-soft text-[#9A7A20]">
-        EXPERIMENTAL
-      </span>
-      <div className="text-[11px] font-medium uppercase tracking-wide text-secondary mb-2">
-        Biological Entropy Index
+    <Card>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-[11px] font-medium uppercase tracking-wide text-secondary">Heart rhythm complexity</h2>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-border-soft px-2.5 py-1 text-xs font-semibold text-chip-none">
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5">
+            <path d="M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          Not measured
+        </span>
       </div>
-      <div className="text-[40px] font-bold text-primary leading-none">{value.toFixed(2)}</div>
-      <p className="text-sm text-secondary mt-3">
-        Relative uncertainty / disorder in the estimated physiological state distribution.{" "}
-        <strong className="text-charcoal">Not</strong> a validated biological-entropy instrument. For
-        research exploration only.
+      <p className="mt-3 text-sm">
+        How complex the gaps between heartbeats are (sample entropy). A lower number means a more regular rhythm, which
+        comes with ageing and illness.
       </p>
-      <div className="mt-4 h-2 rounded-full bg-border-soft overflow-hidden">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-      </div>
+      <p className="mt-2 text-sm text-secondary">
+        Not measured for this simulated crew member: it needs a beat-to-beat recording, such as a chest-strap heart monitor.
+      </p>
+      <Link
+        href="/proof/heart-rhythm"
+        className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-charcoal underline underline-offset-2 hover:text-chip-act"
+      >
+        See it on real heart recordings
+      </Link>
     </Card>
   );
 }

@@ -165,8 +165,6 @@ export type TelemetryResponse = {
     bins: string[];
     values: number[];
     active: string;
-    entropy_index: number;
-    entropy_label: string;
     experimental: boolean;
   };
 };

@@ -28,8 +28,6 @@
     "bins": ["Stable", "Mild stress", "Coupled stress", "High uncertainty", "Recovery"],
     "values": [18, 32, 27, 14, 9],
     "active": "Coupled stress",
-    "entropy_index": 0.62,
-    "entropy_label": "Biological Entropy Index",
     "experimental": true
   }
 }

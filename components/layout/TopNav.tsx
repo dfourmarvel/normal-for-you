@@ -18,6 +18,7 @@ const PRIMARY = [
 
 const MORE = [
   { href: "/proof", label: "Proof (NASA data)" },
+  { href: "/proof/heart-rhythm", label: "Heart rhythm (real data)" },
   { href: "/forecasts", label: "Forecasts" },
   { href: "/recommendations", label: "Recommendations" },
   { href: "/scenarios", label: "Scenarios" },
@@ -40,7 +41,9 @@ export function TopNav() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
-  const moreActive = MORE.some((n) => pathname === n.href || pathname.startsWith(n.href + "/"));
+  // Most specific match wins, so /proof/heart-rhythm doesn't also light up /proof.
+  const moreHref = MORE.filter((n) => pathname === n.href || pathname.startsWith(n.href + "/")).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const moreActive = moreHref !== undefined;
 
   // Close both menus on navigation (React's "reset state when a prop changes" pattern).
   const [menuPath, setMenuPath] = useState(pathname);
@@ -97,7 +100,7 @@ export function TopNav() {
             className="absolute top-[calc(100%+8px)] right-0 min-w-[200px] bg-white rounded-2xl shadow-[0_8px_28px_rgba(44,40,36,0.10)] border border-border p-1.5 z-40"
           >
             {MORE.map((n) => {
-              const active = pathname === n.href || pathname.startsWith(n.href + "/");
+              const active = n.href === moreHref;
               return (
                 <Link
                   key={n.href}
@@ -165,7 +168,7 @@ export function TopNav() {
             })}
             <div className="my-1.5 mx-2 border-t border-border-soft" />
             {MORE.map((n) => {
-              const active = pathname === n.href || pathname.startsWith(n.href + "/");
+              const active = n.href === moreHref;
               return (
                 <Link key={n.href} href={n.href} className={navLinkClass(active, true)}>
                   {n.label}

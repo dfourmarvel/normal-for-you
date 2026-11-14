@@ -13,7 +13,6 @@ export default function SettingsPage() {
         <Card>
           <div className="font-semibold text-[15px] mb-3">Role & display</div>
           <SettingRow title="Default role" sub="Mission Health Ops" trailing="Switcher in header" />
-          <SettingRow title="Show experimental badges" sub="Entropy & BEI panels" on />
           <SettingRow title="Persistent disclaimer" sub="Always visible" on />
           <SettingRow title="Simulated-data tags" on />
         </Card>

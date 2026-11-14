@@ -21,7 +21,7 @@ export default function BiologicalStatePage() {
       <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4 mb-4">
         <InteractionGraph />
         <div className="space-y-4">
-          <EntropyPanel value={dist.entropy_index} />
+          <EntropyPanel />
           <StateDistribution bins={dist.bins} values={dist.values} active={dist.active} />
         </div>
       </div>

@@ -51,8 +51,8 @@ export function headline({ young, elderly, test }: Summary): string {
   const diff = young.median - elderly.median;
   const lead =
     Math.abs(diff) < 0.0005
-      ? `Young and older adults had about the same heart rhythm complexity (median ${fmt(young.median)} and ${fmt(elderly.median)}).`
-      : `Young adults' heart rhythms were ${diff > 0 ? "more" : "less"} complex: median ${fmt(young.median)} against ${fmt(elderly.median)} for older adults.`;
+      ? `Young and older adults had about the same heart rhythm predictability (median ${fmt(young.median)} and ${fmt(elderly.median)}).`
+      : `Young adults' heart rhythms were ${diff > 0 ? "less" : "more"} predictable: median ${fmt(young.median)} against ${fmt(elderly.median)} for older adults.`;
   return `${lead} In ${test.u} of ${test.pairs} young–older pairs, the young person scored higher.`;
 }
 

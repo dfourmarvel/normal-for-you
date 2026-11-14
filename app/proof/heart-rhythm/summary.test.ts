@@ -22,10 +22,10 @@ describe("heart-rhythm summary", () => {
 
   it("builds the headline from the numbers", () => {
     expect(headline(s)).toBe(
-      "Young adults' heart rhythms were more complex: median 1.450 against 1.375 for older adults. In 3 of 4 young–older pairs, the young person scored higher.",
+      "Young adults' heart rhythms were less predictable: median 1.450 against 1.375 for older adults. In 3 of 4 young–older pairs, the young person scored higher.",
     );
     const flipped = summarise([person("y", "young", 25, 1), person("o", "elderly", 75, 2)]);
-    expect(headline(flipped)).toContain("were less complex");
+    expect(headline(flipped)).toContain("were more predictable");
   });
 
   it("states the chance in plain words", () => {

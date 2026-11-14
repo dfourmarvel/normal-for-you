@@ -67,10 +67,10 @@ export function HeartRhythmView() {
           <svg aria-hidden="true" viewBox="0 0 8 8" className="h-2 w-2"><circle cx="4" cy="4" r="4" fill="currentColor" /></svg>
           Real data
         </span>
-        <h1 className="mt-3 text-[28px] leading-tight font-bold">Heart rhythm complexity</h1>
+        <h1 className="mt-3 text-[28px] leading-tight font-bold">Heart rhythm predictability</h1>
         <p className="mt-2 text-secondary">
           A healthy heart does not tick like a clock: the gap between beats changes all the time. This page measures how
-          complex those changes are for 40 healthy adults, worked out in your browser.
+          regular those changes are for 40 healthy adults, worked out in your browser.
         </p>
         <p className="mt-2 text-sm text-secondary">
           Real data:{" "}
@@ -98,12 +98,12 @@ export function HeartRhythmView() {
         <SectionLabel id="what">What this measures</SectionLabel>
         <p className="mt-2 text-sm">
           The number is sample entropy. It looks at short runs of heartbeat gaps and asks how often a pattern that repeats
-          for {M} beats still repeats on the next one. A more regular, predictable rhythm gives a lower number; a more
-          complex rhythm gives a higher one.
+          for {M} beats still repeats on the next one. A more regular, predictable rhythm gives a lower number; a less
+          predictable one gives a higher number. Higher is not always healthier: an irregular heartbeat such as atrial
+          fibrillation scores high too (Costa, Goldberger &amp; Peng 2002).
         </p>
         <p className="mt-2 text-sm">
-          Healthy bodies vary in a complex way. Ageing and illness tend to make the heart rhythm more regular (Lipsitz &amp;
-          Goldberger 1992; Costa, Goldberger &amp; Peng 2002).
+          In healthy people, the rhythm tends to become more regular with age (Lipsitz &amp; Goldberger 1992).
         </p>
         <p className="mt-2 text-xs text-secondary">
           Method: gaps between normal heartbeats over the whole recording; pattern length {M} beats; two gaps count as alike
@@ -144,10 +144,11 @@ export function HeartRhythmView() {
           {load.state === "ready" && (
             <>
               <li><span className="font-medium text-charcoal">Data:</span> {load.meta.source}. Licence: {load.meta.licence}.</li>
-              <li><span className="font-medium text-charcoal">Cite:</span> {load.meta.cite}</li>
               <li><span className="font-medium text-charcoal">Processing:</span> {load.meta.method}</li>
             </>
           )}
+          <li>Iyengar N, Peng C-K, Morin R, Goldberger AL, Lipsitz LA. Age-related alterations in the fractal scaling of cardiac interbeat interval dynamics. Am J Physiol 1996;271:R1078-R1084.</li>
+          <li>Goldberger AL et al. PhysioBank, PhysioToolkit, and PhysioNet. Circulation 2000;101(23):e215-e220.</li>
           <li>Richman JS, Moorman JR. Physiological time-series analysis using approximate entropy and sample entropy. Am J Physiol Heart Circ Physiol 2000;278:H2039–H2049.</li>
           <li>Costa M, Goldberger AL, Peng C-K. Multiscale entropy analysis of complex physiologic time series. Phys Rev Lett 2002;89:068102.</li>
           <li>Lipsitz LA, Goldberger AL. Loss of &lsquo;complexity&rsquo; and aging. JAMA 1992;267:1806–1809.</li>
@@ -231,7 +232,7 @@ function Results({ people, summary }: { people: Person[]; summary: Summary }) {
               </span>
             </span>
             <span className="mt-1 block">
-              Each mark is one person; further right means a more complex rhythm. {groupText("young")}. {groupText("elderly")}.
+              Each mark is one person; further right means a less predictable rhythm. {groupText("young")}. {groupText("elderly")}.
               Every number is in the tables below.
             </span>
           </figcaption>

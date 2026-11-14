@@ -1,26 +1,64 @@
 @import "tailwindcss";
 
+/* Light theme only for now. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-canvas: #f7f4f0;
+  --bg-card: #fff;
+  --bg-card-muted: #fbf9f7;
+  --border: #e8e2da;
+  --border-soft: #f0ebe4;
+  --charcoal: #2c2c2c;
+  --text-secondary: #6b6560;
+  --text-muted: #9a948c; /* 3.0:1 on white: large text and graphics only */
+  --primary: #ee6d52;
+  --primary-hover: #e0553a;
+  --primary-soft: #fdf0ed;
+  --teal: #7da7b0;
+  --teal-dark: #5a8a94;
+  --teal-soft: #e8f1f3;
+  --success: #5ba88a;
+  --warning: #e8a054;
+  --yellow-soft: #fbf5dc;
+  --blue: #6b9bc3;
+
+  /* Chip text, each ≥ 5:1 on its chip background. */
+  --chip-watch-text: #7a4a06;
+  --chip-nominal-text: #2f6b54;
+  --chip-act-text: #b23a20;
+  --chip-none-text: #5c5650;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-canvas: var(--bg-canvas);
+  --color-card: var(--bg-card);
+  --color-card-muted: var(--bg-card-muted);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-charcoal: var(--charcoal);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-teal: var(--teal);
+  --color-teal-dark: var(--teal-dark);
+  --color-teal-soft: var(--teal-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-yellow-soft: var(--yellow-soft);
+  --color-blue: var(--blue);
+  --color-chip-watch: var(--chip-watch-text);
+  --color-chip-nominal: var(--chip-nominal-text);
+  --color-chip-act: var(--chip-act-text);
+  --color-chip-none: var(--chip-none-text);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-canvas);
+  color: var(--charcoal);
+}
+
+h1 {
+  letter-spacing: -0.02em;
 }

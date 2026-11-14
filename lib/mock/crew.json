@@ -1,0 +1,126 @@
+{
+  "mission": {
+    "id": "ISS-EXP-72",
+    "name": "Expedition 72 (simulated)",
+    "vehicle": "International Space Station",
+    "elapsed_days": 94,
+    "remaining_days": 86,
+    "environment": {
+      "radiation_uGy_day": 214,
+      "radiation_status": "elevated",
+      "gravity": "micro-g",
+      "isolation_index": 0.72,
+      "cabin_co2_ppm": 3100,
+      "cabin_humidity_pct": 42,
+      "water_recycle_pct": 93
+    },
+    "data_quality": {
+      "telemetry_coverage_pct": 97.4,
+      "baseline_freshness_days": 3,
+      "sensor_offline": 1
+    }
+  },
+  "crew": [
+    {
+      "id": "cm-reyes",
+      "name": "Cmdr. Elena Reyes",
+      "callsign": "Reyes",
+      "role": "Commander",
+      "nationality": "USA",
+      "age": 42,
+      "avatar_color": "#EE6D52",
+      "initials": "ER",
+      "status": "watch",
+      "active_finding": {
+        "region": "Lower limbs — musculoskeletal",
+        "code": "MSK-DECOND-L",
+        "title": "Microgravity deconditioning (legs)",
+        "severity": "moderate",
+        "last_update": "2026-11-05T11:42:00Z",
+        "summary": "Elevated interaction between reduced load-bearing activity, sleep fragmentation, and mild fluid shift. Pattern consistent with progressive lower-limb muscle/bone unloading."
+      },
+      "vitals": {
+        "hr_rest": { "value": 58, "unit": "bpm", "baseline": 52, "delta_pct": 11.5, "status": "watch" },
+        "hrv_rmssd": { "value": 32, "unit": "ms", "baseline": 41, "delta_pct": -22.0, "status": "attention" },
+        "spo2": { "value": 97.8, "unit": "%", "baseline": 98.2, "delta_pct": -0.4, "status": "nominal" },
+        "sleep_efficiency": { "value": 78, "unit": "%", "baseline": 88, "delta_pct": -11.4, "status": "watch" },
+        "temp_c": { "value": 36.7, "unit": "°C", "baseline": 36.6, "delta_pct": 0.3, "status": "nominal" },
+        "bp_sys": { "value": 118, "unit": "mmHg", "baseline": 114, "delta_pct": 3.5, "status": "nominal" }
+      },
+      "hotspots": [
+        { "id": "cardio", "label": "Cardiovascular", "x": 50, "y": 28, "color": "#6B9BC3", "status": "nominal" },
+        { "id": "msk", "label": "Musculoskeletal", "x": 48, "y": 68, "color": "#E8C547", "status": "attention", "active": true },
+        { "id": "vestibular", "label": "Vestibular", "x": 50, "y": 12, "color": "#7DA7B0", "status": "nominal" },
+        { "id": "sleep", "label": "Sleep / circadian", "x": 50, "y": 8, "color": "#EE6D52", "status": "watch" },
+        { "id": "radiation", "label": "Radiation load", "x": 72, "y": 22, "color": "#9B7EBD", "status": "watch" }
+      ]
+    },
+    {
+      "id": "cm-okafor",
+      "name": "Flt. Eng. Chidi Okafor",
+      "callsign": "Okafor",
+      "role": "Flight Engineer",
+      "nationality": "Nigeria / ESA",
+      "age": 36,
+      "avatar_color": "#7DA7B0",
+      "initials": "CO",
+      "status": "nominal",
+      "active_finding": null,
+      "vitals": {
+        "hr_rest": { "value": 54, "unit": "bpm", "baseline": 53, "delta_pct": 1.9, "status": "nominal" },
+        "hrv_rmssd": { "value": 44, "unit": "ms", "baseline": 45, "delta_pct": -2.2, "status": "nominal" },
+        "spo2": { "value": 98.4, "unit": "%", "baseline": 98.5, "delta_pct": -0.1, "status": "nominal" },
+        "sleep_efficiency": { "value": 86, "unit": "%", "baseline": 87, "delta_pct": -1.1, "status": "nominal" },
+        "temp_c": { "value": 36.5, "unit": "°C", "baseline": 36.5, "delta_pct": 0, "status": "nominal" },
+        "bp_sys": { "value": 112, "unit": "mmHg", "baseline": 110, "delta_pct": 1.8, "status": "nominal" }
+      }
+    },
+    {
+      "id": "cm-park",
+      "name": "Sci. Off. Hana Park",
+      "callsign": "Park",
+      "role": "Science Officer",
+      "nationality": "Republic of Korea",
+      "age": 34,
+      "avatar_color": "#6B9BC3",
+      "initials": "HP",
+      "status": "watch",
+      "active_finding": {
+        "region": "Sleep / circadian",
+        "code": "CIRC-FRAG-M",
+        "title": "Circadian fragmentation (moderate)",
+        "severity": "moderate",
+        "last_update": "2026-11-05T09:15:00Z",
+        "summary": "Sleep efficiency below personal baseline for 5 consecutive days; correlated with elevated cabin CO₂ nights and high schedule load."
+      },
+      "vitals": {
+        "hr_rest": { "value": 61, "unit": "bpm", "baseline": 56, "delta_pct": 8.9, "status": "watch" },
+        "hrv_rmssd": { "value": 36, "unit": "ms", "baseline": 42, "delta_pct": -14.3, "status": "watch" },
+        "spo2": { "value": 97.9, "unit": "%", "baseline": 98.1, "delta_pct": -0.2, "status": "nominal" },
+        "sleep_efficiency": { "value": 71, "unit": "%", "baseline": 85, "delta_pct": -16.5, "status": "attention" },
+        "temp_c": { "value": 36.8, "unit": "°C", "baseline": 36.6, "delta_pct": 0.5, "status": "nominal" },
+        "bp_sys": { "value": 120, "unit": "mmHg", "baseline": 116, "delta_pct": 3.4, "status": "nominal" }
+      }
+    },
+    {
+      "id": "cm-volkov",
+      "name": "Flt. Eng. Dmitri Volkov",
+      "callsign": "Volkov",
+      "role": "Flight Engineer",
+      "nationality": "Russia",
+      "age": 39,
+      "avatar_color": "#5BA88A",
+      "initials": "DV",
+      "status": "nominal",
+      "active_finding": null,
+      "vitals": {
+        "hr_rest": { "value": 56, "unit": "bpm", "baseline": 55, "delta_pct": 1.8, "status": "nominal" },
+        "hrv_rmssd": { "value": 40, "unit": "ms", "baseline": 39, "delta_pct": 2.6, "status": "nominal" },
+        "spo2": { "value": 98.1, "unit": "%", "baseline": 98.0, "delta_pct": 0.1, "status": "nominal" },
+        "sleep_efficiency": { "value": 84, "unit": "%", "baseline": 86, "delta_pct": -2.3, "status": "nominal" },
+        "temp_c": { "value": 36.6, "unit": "°C", "baseline": 36.6, "delta_pct": 0, "status": "nominal" },
+        "bp_sys": { "value": 122, "unit": "mmHg", "baseline": 120, "delta_pct": 1.7, "status": "nominal" }
+      }
+    }
+  ]
+}

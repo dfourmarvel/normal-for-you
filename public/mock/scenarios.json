@@ -1,0 +1,62 @@
+{
+  "scenarios": [
+    {
+      "id": "spe-2026-11",
+      "title": "Solar particle event (SPE)",
+      "type": "radiation",
+      "status": "tabletop",
+      "severity": "high",
+      "started": "2026-11-03T16:00:00Z",
+      "summary": "Elevated proton flux forecast. Evaluate sheltering timing vs exercise/sleep constraints and coupled stress on Reyes (MSK watch) and Park (circadian watch).",
+      "phases": {
+        "before": {
+          "label": "Before",
+          "window": "T−24h → T0",
+          "notes": "Nominal ops. Radiation 180–200 µGy/day. Reyes MSK watch already active. Park sleep efficiency 74%.",
+          "metrics": { "crew_stress_index": 0.34, "radiation_uGy_h": 8.2, "sheltering": "none" }
+        },
+        "during": {
+          "label": "During",
+          "window": "T0 → T+18h",
+          "notes": "SPE peak. Storm shelter occupied 6.5h cumulative. Exercise deferred. Sleep disrupted for Park + Reyes.",
+          "metrics": { "crew_stress_index": 0.61, "radiation_uGy_h": 42.0, "sheltering": "storm module" }
+        },
+        "after": {
+          "label": "After",
+          "window": "T+18h → T+72h",
+          "notes": "Flux decaying. Recovery blocks scheduled. SB optimizer reallocates ARED + sleep protection under residual fatigue.",
+          "metrics": { "crew_stress_index": 0.44, "radiation_uGy_h": 12.5, "sheltering": "standby" }
+        }
+      }
+    },
+    {
+      "id": "sleep-isolation-94",
+      "title": "Sleep disruption / isolation stress",
+      "type": "behavioral",
+      "status": "active-watch",
+      "severity": "moderate",
+      "started": "2026-10-28T00:00:00Z",
+      "summary": "Multi-day sleep fragmentation correlated with elevated cabin CO₂ nights and high timeline pressure. Focus crew: Park, secondary: Reyes.",
+      "phases": {
+        "before": {
+          "label": "Before",
+          "window": "Day 80–88",
+          "notes": "Sleep efficiency within baseline band. Isolation index rising slowly.",
+          "metrics": { "crew_stress_index": 0.28, "mean_sleep_eff": 86, "co2_night_ppm": 2800 }
+        },
+        "during": {
+          "label": "During",
+          "window": "Day 89–94",
+          "notes": "Park sleep efficiency 71%. Reyes HRV down. Interaction graph shows sleep↔HRV↔MSK coupling.",
+          "metrics": { "crew_stress_index": 0.52, "mean_sleep_eff": 76, "co2_night_ppm": 3200 }
+        },
+        "after": {
+          "label": "Projected recovery",
+          "window": "Day 95–100",
+          "notes": "Protected rest windows + CO₂ scrubber priority nights. Forecast stress index → 0.36 if adherence ≥80%.",
+          "metrics": { "crew_stress_index": 0.36, "mean_sleep_eff": 83, "co2_night_ppm": 2900 }
+        }
+      }
+    }
+  ]
+}

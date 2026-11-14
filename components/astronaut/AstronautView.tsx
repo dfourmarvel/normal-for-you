@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  actionLines, buddyNotes, CHARTABLE, clampDay, crewCard, dayView, defaultTrendIndicator, detectionFacts, FIRST_DAY, isFlagged, LAST_DAY,
+  actionLines, buddyNotes, CHARTABLE, clampDay, crewCard, dayView, defaultTrendIndicator, detectionFacts, FIRST_DAY, humanPhases, isFlagged, LAST_DAY,
   QUESTION_LABEL, SCREENING, SIMULATED_LABEL, surgeonReport, trendView, valueText, type CrewId, type IndicatorRow, type RegionView,
 } from "@/app/astronaut/model";
 import { capitalize, INDICATOR_LABEL } from "@/lib/engine/format";
@@ -26,6 +26,14 @@ export function AstronautView({ id }: { id: CrewId }) {
   const buddies = buddyNotes(id, day);
   const facts = detectionFacts(id);
 
+  // Screen readers hear the day line only after the slider has rested for 400 ms, not on every step of a drag.
+  const dayLine = `Day ${view.day} of ${LAST_DAY}: ${view.phaseLabel}`;
+  const [spoken, setSpoken] = useState(dayLine);
+  useEffect(() => {
+    const t = setTimeout(() => setSpoken(dayLine), 400);
+    return () => clearTimeout(t);
+  }, [dayLine]);
+
   const go = (d: number) => {
     const next = clampDay(d);
     setDay(next);
@@ -37,7 +45,7 @@ export function AstronautView({ id }: { id: CrewId }) {
   };
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
       <Link href="/astronaut" className={`text-sm text-secondary underline underline-offset-2 hover:text-charcoal ${FOCUS}`}>
         All test astronauts
       </Link>
@@ -69,9 +77,8 @@ export function AstronautView({ id }: { id: CrewId }) {
             />
           </label>
         </div>
-        <p className="mt-2 text-base font-semibold" aria-live="polite">
-          Day {view.day} of {LAST_DAY}: {view.phaseLabel}
-        </p>
+        <p className="mt-2 text-base font-semibold">{dayLine}</p>
+        <p className="sr-only" aria-live="polite">{spoken}</p>
         <div role="group" aria-label="Story days" className="mt-3 flex flex-wrap gap-2">
           {card.storyDays.map((s) => (
             <button
@@ -149,7 +156,7 @@ export function AstronautView({ id }: { id: CrewId }) {
       </section>
 
       <ReportDialog ref={dialog} report={report} />
-    </main>
+    </div>
   );
 }
 
@@ -222,7 +229,7 @@ function IndicatorItem({ row }: { row: IndicatorRow }) {
             <div key={a.question} className="rounded-xl border border-border-soft bg-card-muted p-3">
               <p className="text-xs font-medium">{QUESTION_LABEL[a.question]}</p>
               <div className="mt-1.5"><StatusChip status={a.status} /></div>
-              <p className="mt-1.5 text-xs text-secondary [overflow-wrap:anywhere]">{a.compareTo}</p>
+              <p className="mt-1.5 text-xs text-secondary [overflow-wrap:anywhere]">{humanPhases(a.compareTo)}</p>
             </div>
           ))}
         </div>

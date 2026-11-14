@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function AstronautPickerPage() {
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
       <header className="max-w-2xl">
         <SimulatedBadge text={SIMULATED_LABEL} />
         <h1 className="mt-3 text-[28px] leading-tight font-bold">Astronaut self-check</h1>
@@ -31,6 +31,6 @@ export default function AstronautPickerPage() {
         ))}
       </ul>
       <p className="mt-6 text-sm font-semibold">{SCREENING}</p>
-    </main>
+    </div>
   );
 }

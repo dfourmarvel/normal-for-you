@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DETECTION_SUMMARY as S, SIMULATED_LABEL } from "@/lib/testCrew";
 import {
-  buddyNotes, clampDay, crewCards, dayView, defaultTrendIndicator, detectionFacts, isFlagged, SCREENING, SEND_DELAY, surgeonReport, trendView,
-  type DayView,
+  actionLines, answerLines, buddyNotes, clampDay, combinedDrift, humanPhases, PHASE_LABEL, crewCards, dayView, defaultTrendIndicator, detectionFacts, isFlagged, SCREENING, SEND_DELAY, surgeonReport, trendView,
+  type DayView, type IndicatorRow,
 } from "./model";
 
 const region = (v: DayView, r: string) => v.regions.find((x) => x.region === r)!;
@@ -55,8 +55,31 @@ describe("astronaut self-check view models", () => {
     const text = surgeonReport(v, region(v, "brainSleepMood"));
     for (const s of ["(draft, not sent)", SIMULATED_LABEL, "Astronaut: Test astronaut C", "Mission day 165, phase: Pre-landing",
       "Brain, sleep and mood: Watch", "Normal for people? Watch", "Normal for you?", "Normal for this mission day?",
-      `Send delay: ${SEND_DELAY}.`, SCREENING]) expect(text).toContain(s);
-    expect(SEND_DELAY).toContain("not a NASA figure");
+      `${SEND_DELAY}.`, SCREENING]) expect(text).toContain(s);
+    expect(SEND_DELAY).toContain("up to 20 min one way");
+    expect(text).not.toContain("12 min");
+  });
+
+  it("no raw phase key (preLanding, first72h...) reaches the report or the answer lines", () => {
+    const keys = Object.keys(PHASE_LABEL).filter((k) => /[A-Z0-9]/.test(k));
+    const v = dayView("C", 165);
+    const verdicts = v.regions.flatMap((r) => r.rows).flatMap((r) => (r.result.verdict ? [r.result.verdict] : []));
+    const lines = verdicts.flatMap((x) => answerLines(x)).concat(verdicts.flatMap((x) => actionLines(x).map(([, t]) => t)));
+    lines.push(...v.regions.map((r) => surgeonReport(v, r)));
+    expect(lines.join(" ")).toContain("expected for pre-landing");
+    for (const k of keys) expect(lines.join(" ")).not.toContain(k);
+    expect(humanPhases("bigger than expected for first72h")).toBe("bigger than expected for first 72 hours");
+  });
+
+  it("combined drift wording: none alone, one alone (singular), all flagged", () => {
+    const row = (label: string, status: "act" | "nominal"): IndicatorRow =>
+      ({ indicator: "sleepHours", label, result: { status } as IndicatorRow["result"] });
+    const reasons = ["Combined drift: 3 readings moved the wrong way this week: sleep - 1, fatigue score + 2, mood score + 3"];
+    const rows = (a: boolean, b: boolean, c: boolean) => [row("sleep", a ? "act" : "nominal"), row("fatigue score", b ? "act" : "nominal"), row("mood score", c ? "act" : "nominal")];
+    expect(combinedDrift("Heart", reasons, rows(false, false, false))!.text).toContain("none far enough alone");
+    expect(combinedDrift("Heart", reasons, rows(true, false, false))!.text).toContain("1 of them is flagged on its own too");
+    expect(combinedDrift("Heart", reasons, rows(true, true, false))!.text).toContain("2 of them are flagged on their own too");
+    expect(combinedDrift("Heart", reasons, rows(true, true, true))!.text).toContain("all 3 are flagged on their own too");
   });
 
   it("buddy check about C shows only in the week of day 161", () => {

@@ -39,8 +39,13 @@ export const QUESTION_LABEL: Record<Answer["question"], string> = {
   people: "Normal for people?", you: "Normal for you?", today: "Normal for this mission day?",
 };
 
-// 01c cites no signal delay, so the demo shows an assumption and says so (spec §6).
-export const SEND_DELAY = "demo assumption: Mars transit, 12 min one way (not a NASA figure)";
+// Source: https://www.nasa.gov/hrp/hazard-distance-from-earth/ ("a communication delay of up to 20 minutes one way").
+export const SEND_DELAY = 'Message delay at Mars distance: up to 20 min one way (NASA Human Research Program, "Hazard: Distance From Earth")';
+
+// The engine writes raw phase keys into its text ("expected for preLanding"); show the human label instead.
+const PHASE_KEY_RE = new RegExp(String.raw`\b(${Object.keys(PHASE_LABEL).join("|")})\b`, "g");
+export const humanPhases = (text: string): string =>
+  text.replace(PHASE_KEY_RE, (k) => PHASE_LABEL[k as Phase].toLowerCase());
 export const SCREENING = "Screening, not a diagnosis.";
 export { SIMULATED_LABEL };
 
@@ -87,9 +92,11 @@ export function combinedDrift(regionLabel: string, reasons: readonly string[], r
   const region = regionLabel.toLowerCase();
   // Spec §6 says "none far enough alone"; that is only true when no drifting reading is flagged by itself.
   const flaggedAlone = items.filter((item) => rows.some((r) => item.startsWith(`${r.label} `) && isFlagged(r.result.status))).length;
+  const own = flaggedAlone === n ? `all ${n} are flagged on their own too`
+    : `${flaggedAlone} of them ${flaggedAlone === 1 ? "is" : "are"} flagged on ${flaggedAlone === 1 ? "its" : "their"} own too`;
   const text = flaggedAlone === 0
     ? `${n} readings in ${region} moved the wrong way this week, none far enough alone. Together they're worth a check: ${list}.`
-    : `${n} readings in ${region} moved the wrong way this week; ${flaggedAlone} of them ${flaggedAlone === 1 ? "is" : "are"} flagged on ${flaggedAlone === 1 ? "its" : "their"} own too. Together they're worth a check: ${list}.`;
+    : `${n} readings in ${region} moved the wrong way this week; ${own}. Together they're worth a check: ${list}.`;
   return { n, items, flaggedAlone, text };
 }
 
@@ -111,15 +118,15 @@ export function dayView(id: CrewId, rawDay: number): DayView {
 
 export const valueText = (r: Reading): string => `${fmtNum(r.value)} ${r.unit}`;
 
-function answerLines(v: Verdict): string[] {
-  return v.answers.map((a) => `  ${QUESTION_LABEL[a.question]} ${STATUS_LABEL[a.status]} (${a.compareTo})`);
+export function answerLines(v: Verdict): string[] {
+  return v.answers.map((a) => `  ${QUESTION_LABEL[a.question]} ${STATUS_LABEL[a.status]} (${humanPhases(a.compareTo)})`);
 }
 
 export function actionLines(v: Verdict): [string, string][] {
   const a = v.action;
   const lines: [string, string][] = [["What we saw", a.saw], ["Why it matters", a.why], ["Do now", a.doNow], ["Re-check", a.recheckWhen]];
   if (a.callGroundWhen) lines.push(["Call the ground", a.callGroundWhen]);
-  return lines.filter(([, text]) => text);
+  return lines.filter(([, text]) => text).map(([k, text]) => [k, humanPhases(text)]);
 }
 
 // Plain text for the flight surgeon. Nothing is sent: the screen offers "Copy report" only.
@@ -139,7 +146,7 @@ export function surgeonReport(view: DayView, region: RegionView): string {
     out.push(`- ${capitalize(label)} ${valueText(v.reading)} on day ${v.reading.missionDay}: ${STATUS_LABEL[v.overall]}`, ...answerLines(v));
     for (const [k, text] of actionLines(v)) out.push(`  ${k}: ${text}`);
   }
-  out.push("", `Send delay: ${SEND_DELAY}.`, SCREENING);
+  out.push("", `${SEND_DELAY}.`, SCREENING);
   return out.join("\n");
 }
 

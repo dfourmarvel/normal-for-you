@@ -70,14 +70,15 @@ describe("real sourced tables on the real OSD-569 file", () => {
     expect(rcvForRow(row).downPct).toBeCloseTo(-24.6, 1);
   });
 
-  it.each(["C001", "C002", "C003"])("%s day after landing: normal for people, not normal for you", (crew) => {
+  it.each(["C001", "C002"])("%s day after landing: normal for people, not normal for you", (crew) => {
     const v = evaluate(rPlus1(crew), lymph, { phase: "postflight", missionDay: 4 }, tables);
     expect(v.answers[0].status).toBe("nominal");
     expect(v.answers[1].status).toBe("watch");
   });
 
-  it("C004 (+21%) stays inside its own band", () => {
-    const v = evaluate(rPlus1("C004"), lymph, { phase: "postflight", missionDay: 4 }, tables);
+  it.each(["C003", "C004"])("%s day after landing stays inside its own band (C003 +0%, C004 +21%)", (crew) => {
+    const v = evaluate(rPlus1(crew), lymph, { phase: "postflight", missionDay: 4 }, tables);
+    expect(v.answers[0].status).toBe("nominal");
     expect(v.answers[1].status).toBe("nominal");
   });
 

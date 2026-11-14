@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { loadOsd569 } from "@/lib/data/osd569";
+import { FLIGHT_DAYS, loadOsd569, type Correction } from "@/lib/data/osd569";
 import { defaultTables, withLabRanges } from "@/lib/engine";
 import type { Answer, Indicator, Reading, Status } from "@/lib/types";
 import type { Tables } from "@/lib/data/tables";
 import { CrewChart } from "./CrewChart";
-import { MARKERS, buildMarker, fmtPct, fmtValue, summarySentence, type CrewView, type MarkerView } from "./compute";
+import {
+  MARKERS, buildMarker, changeLabel, correctionSentence, fmtCv, fmtPct, fmtValue, studyShape, summarySentence, type CrewView, type MarkerView,
+} from "./compute";
 
 type Load =
   | { state: "loading" }
   | { state: "error"; message: string }
-  | { state: "ready"; readings: Reading[]; tables: Tables };
+  | { state: "ready"; readings: Reading[]; tables: Tables; corrections: Correction[] };
 
 const OSDR_URL = "https://osdr.nasa.gov/bio/repo/data/studies/OSD-569";
 
@@ -22,7 +24,7 @@ export function ProofView() {
   useEffect(() => {
     let live = true;
     loadOsd569()
-      .then(({ readings, ranges }) => live && setLoad({ state: "ready", readings, tables: withLabRanges(defaultTables, ranges) }))
+      .then(({ readings, ranges, corrections }) => live && setLoad({ state: "ready", readings, corrections, tables: withLabRanges(defaultTables, ranges) }))
       .catch((e: unknown) => live && setLoad({ state: "error", message: e instanceof Error ? e.message : String(e) }));
     return () => {
       live = false;
@@ -32,13 +34,14 @@ export function ProofView() {
   const view = useMemo((): MarkerView | Error | null => {
     if (load.state !== "ready") return null;
     try {
-      return buildMarker(indicator, load.readings, load.tables);
+      return buildMarker(indicator, load.readings, load.tables, load.corrections);
     } catch (e) {
       return e instanceof Error ? e : new Error(String(e));
     }
   }, [load, indicator]);
 
   const markerName = MARKERS.find((m) => m.indicator === indicator)?.label ?? indicator;
+  const shape = useMemo(() => (load.state === "ready" ? studyShape(load.readings) : null), [load]);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
@@ -84,12 +87,15 @@ export function ProofView() {
         {view instanceof Error && <Notice error>Could not work out this marker. {view.message}</Notice>}
       </div>
 
-      {view && !(view instanceof Error) && <MarkerSection view={view} markerName={markerName} />}
+      {view && !(view instanceof Error) && load.state === "ready" && <MarkerSection view={view} markerName={markerName} corrections={load.corrections} />}
 
       <section aria-labelledby="limits" className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
         <SectionLabel id="limits">Honest limits</SectionLabel>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-          <li>4 people, one 3-day flight, 7 draws each. This shows the method on real data; it is not a medical finding.</li>
+          <li>
+            {shape ? `${shape.crew} people, one ${FLIGHT_DAYS}-day flight (Inspiration4), ${shape.draws} draws each.` : `One ${FLIGHT_DAYS}-day flight (Inspiration4).`}{" "}
+            This shows the method on real data; it is not a medical finding.
+          </li>
           <li>Personal bands use 3 pre-flight draws; the method papers recommend 5 for a trend check.</li>
           <li className="font-semibold">Screening, not a diagnosis.</li>
         </ul>
@@ -98,12 +104,12 @@ export function ProofView() {
   );
 }
 
-function MarkerSection({ view, markerName }: { view: MarkerView; markerName: string }) {
-  const firstLabel = view.crew.find((c) => c.post.length)?.post[0].label ?? "R+1";
+function MarkerSection({ view, markerName, corrections }: { view: MarkerView; markerName: string; corrections: Correction[] }) {
   return (
     <>
-      <p className="mt-6 max-w-2xl text-lg font-medium">{summarySentence(view, firstLabel)}</p>
+      <p className="mt-6 max-w-2xl text-lg font-medium">{summarySentence(view)}</p>
       {view.range?.note && <p className="mt-2 max-w-2xl text-sm text-secondary">{view.range.note}</p>}
+      {corrections.length > 0 && <DataNote corrections={corrections} />}
 
       <section aria-labelledby="crew" className="mt-6">
         <SectionLabel id="crew">{markerName} vs own baseline</SectionLabel>
@@ -149,6 +155,31 @@ function CrewCard({ crew, view, markerName }: { crew: CrewView; view: MarkerView
       )}
       <CrewChart crew={crew} range={view.range} markerName={markerName} />
     </article>
+  );
+}
+
+function DataNote({ corrections }: { corrections: Correction[] }) {
+  const n = corrections.length;
+  return (
+    <section aria-labelledby="data-note" className="mt-4 max-w-2xl rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
+      <SectionLabel id="data-note">Data note</SectionLabel>
+      <p className="mt-2 text-sm">
+        {n === 1 ? "One row" : `${n} rows`} in NASA&apos;s file {n === 1 ? "has" : "have"} cell counts in the wrong columns. Charts mark rebuilt points with a hollow dot.
+      </p>
+      {corrections.map((c) => (
+        <div key={c.sample} className="mt-3">
+          <p className="text-sm">{correctionSentence(c)}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-secondary">
+            {c.changes.map((ch) => (
+              <li key={ch.indicator}>
+                <span className="font-medium text-charcoal">{changeLabel(ch)}</span>: file {ch.fileValue === null ? "empty" : fmtValue(ch.fileValue)}, used{" "}
+                {ch.usedValue === null ? "none" : fmtValue(ch.usedValue)}. {ch.reason}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -216,8 +247,8 @@ function RcvCard({ view, markerName }: { view: MarkerView; markerName: string })
         ? "One-sided: a fall in lymphocytes after flight was named in advance from the literature. We first saw these drops on 5 Nov 2026 and say so."
         : `One-sided: only a ${row.badDirection === "down" ? "fall" : "rise"} counts, named in advance from the literature.`;
   const items: [string, string][] = [
-    ["Within-person variation (CVI)", `${fmtValue(row.cviPct)}%`],
-    ["Lab measurement variation (CVA)", `${fmtValue(row.cvaPct)}%`],
+    ["Within-person variation (CVI)", fmtCv(row.cviPct)],
+    ["Lab measurement variation (CVA)", fmtCv(row.cvaPct)],
     ["Z", z.toFixed(3)],
     ["Change that counts: down", fmtPct(rcv.downPct, 1)],
     ["Change that counts: up", fmtPct(rcv.upPct, 1)],

@@ -5,7 +5,11 @@ import { Button } from "@/components/shared/Button";
 import { Card } from "@/components/shared/Card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Tag } from "@/components/shared/Tag";
-import { getScenarioById } from "@/lib/data";
+import { getScenarioById, getScenarios } from "@/lib/data";
+
+export function generateStaticParams() {
+  return getScenarios().map((s) => ({ id: s.id }));
+}
 
 export default async function ScenarioDetailPage({
   params,

@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { storedSetting, useStoredSetting } from "./stored-setting";
 import type { RoleId } from "./types";
 
 const ROLES: { id: RoleId; label: string }[] = [
@@ -25,27 +18,11 @@ type RoleContextValue = {
 };
 
 const RoleContext = createContext<RoleContextValue | null>(null);
+const roleSetting = storedSetting<RoleId>("bt_role", "ops", (v): v is RoleId => ROLES.some((r) => r.id === v));
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<RoleId>("ops");
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("bt_role") as RoleId | null;
-      if (saved && ROLES.some((r) => r.id === saved)) setRoleState(saved);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const setRole = useCallback((r: RoleId) => {
-    setRoleState(r);
-    try {
-      localStorage.setItem("bt_role", r);
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const role = useStoredSetting(roleSetting);
+  const setRole = roleSetting.set;
 
   const value = useMemo(
     () => ({

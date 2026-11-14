@@ -7,7 +7,11 @@ import { DocLink } from "@/components/shared/DocLink";
 import { Card } from "@/components/shared/Card";
 import { Tag } from "@/components/shared/Tag";
 import { VitalCard } from "@/components/telemetry/VitalCard";
-import { getCrewById, getGuidance, getMission } from "@/lib/data";
+import { getCrew, getCrewById, getGuidance, getMission } from "@/lib/data";
+
+export function generateStaticParams() {
+  return getCrew().map((c) => ({ id: c.id }));
+}
 
 const VITAL_ORDER = ["hr_rest", "hrv_rmssd", "sleep_efficiency", "spo2", "temp_c", "bp_sys"];
 

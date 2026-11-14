@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 import {
   createMissionClockStore,
   formatMissionClock,
@@ -7,7 +7,7 @@ import {
   nextSecondDelay,
   startLiveClock,
   type LiveClockEnv,
-} from "./mission-clock.ts";
+} from "./mission-clock";
 
 function fakeEnv(startMs: number) {
   let now = startMs;

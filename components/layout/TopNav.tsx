@@ -42,10 +42,13 @@ export function TopNav() {
   const moreRef = useRef<HTMLDivElement>(null);
   const moreActive = MORE.some((n) => pathname === n.href || pathname.startsWith(n.href + "/"));
 
-  useEffect(() => {
+  // Close both menus on navigation (React's "reset state when a prop changes" pattern).
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
     setMobileOpen(false);
     setMoreOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {

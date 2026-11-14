@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from "react";
+import { storedSetting, useStoredSetting } from "./stored-setting";
 
 export type Theme = "light" | "dark";
 
@@ -19,7 +12,7 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const STORAGE_KEY = "biotensor-theme";
+const themeSetting = storedSetting<Theme>("biotensor-theme", "light", (v): v is Theme => v === "dark" || v === "light");
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
@@ -29,27 +22,15 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const theme = useStoredSetting(themeSetting);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const initial: Theme = saved === "dark" ? "dark" : "light";
-      setThemeState(initial);
-      applyTheme(initial);
-    } catch {
-      /* ignore */
-    }
+    applyTheme(themeSetting.get());
   }, []);
 
   const setTheme = useCallback((t: Theme) => {
-    setThemeState(t);
+    themeSetting.set(t);
     applyTheme(t);
-    try {
-      localStorage.setItem(STORAGE_KEY, t);
-    } catch {
-      /* ignore */
-    }
   }, []);
 
   const toggle = useCallback(() => {

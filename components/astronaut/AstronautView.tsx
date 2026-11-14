@@ -230,6 +230,7 @@ function IndicatorItem({ row }: { row: IndicatorRow }) {
               <p className="text-xs font-medium">{QUESTION_LABEL[a.question]}</p>
               <div className="mt-1.5"><StatusChip status={a.status} /></div>
               <p className="mt-1.5 text-xs text-secondary [overflow-wrap:anywhere]">{humanPhases(a.compareTo)}</p>
+              {a.source && <p className="mt-1 text-xs text-secondary [overflow-wrap:anywhere]">{a.source}</p>}
             </div>
           ))}
         </div>

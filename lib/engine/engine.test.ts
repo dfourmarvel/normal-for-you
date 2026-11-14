@@ -204,7 +204,7 @@ describe("regionStatus", () => {
     for (const i of ["sleepHours", "fatigueSP", "moodPHQ2"] as const) expect(statusFor(A, i, h, cruise, t).status).toBe("nominal");
     const r = regionStatus("brainSleepMood", A, h, cruise, t);
     expect(r.status).toBe("watch");
-    expect(r.reasons.join(" ")).toContain("Combined drift: 3 readings moved the wrong way this week");
+    expect(r.reasons.join(" ")).toContain("Combined drift: 3 readings moved the wrong way since pre-flight");
   });
 
   it("two drifting members are not enough", () => {

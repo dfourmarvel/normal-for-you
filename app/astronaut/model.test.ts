@@ -31,7 +31,7 @@ describe("astronaut self-check view models", () => {
     const brain = region(dayView("B", 43), "brainSleepMood");
     expect(isFlagged(brain.status)).toBe(true);
     expect(brain.combined?.items.join(", ")).toMatch(/sleep -.*fatigue score \+.*reaction-test lapses \+/);
-    expect(brain.combined?.text).toMatch(/readings in brain, sleep and mood moved the wrong way this week/);
+    expect(brain.combined?.text).toMatch(/readings in brain, sleep and mood moved the wrong way since pre-flight/);
     expect(brain.combined?.text).toContain(`Together they're worth a check: ${brain.combined!.items.join(", ")}.`);
   });
 
@@ -74,7 +74,7 @@ describe("astronaut self-check view models", () => {
   it("combined drift wording: none alone, one alone (singular), all flagged", () => {
     const row = (label: string, status: "act" | "nominal"): IndicatorRow =>
       ({ indicator: "sleepHours", label, result: { status } as IndicatorRow["result"] });
-    const reasons = ["Combined drift: 3 readings moved the wrong way this week: sleep - 1, fatigue score + 2, mood score + 3"];
+    const reasons = ["Combined drift: 3 readings moved the wrong way since pre-flight: sleep - 1, fatigue score + 2, mood score + 3"];
     const rows = (a: boolean, b: boolean, c: boolean) => [row("sleep", a ? "act" : "nominal"), row("fatigue score", b ? "act" : "nominal"), row("mood score", c ? "act" : "nominal")];
     expect(combinedDrift("Heart", reasons, rows(false, false, false))!.text).toContain("none far enough alone");
     expect(combinedDrift("Heart", reasons, rows(true, false, false))!.text).toContain("1 of them is flagged on its own too");

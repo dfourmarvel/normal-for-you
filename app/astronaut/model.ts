@@ -80,8 +80,8 @@ export interface RegionView {
 
 export interface DayView { id: CrewId; name: string; day: number; phase: Phase; phaseLabel: string; overall: Status; regions: RegionView[] }
 
-// The engine's reason reads "Combined drift: {n} readings moved the wrong way this week: {list}".
-const DRIFT_RE = /^Combined drift: (\d+) readings moved the wrong way this week: (.+)$/;
+// The engine's reason reads "Combined drift: {n} readings moved the wrong way since pre-flight: {list}".
+const DRIFT_RE = /^Combined drift: (\d+) readings moved the wrong way since pre-flight: (.+)$/;
 
 export function combinedDrift(regionLabel: string, reasons: readonly string[], rows: readonly IndicatorRow[]): CombinedDrift | undefined {
   const m = reasons.map((r) => DRIFT_RE.exec(r)).find(Boolean);
@@ -95,8 +95,8 @@ export function combinedDrift(regionLabel: string, reasons: readonly string[], r
   const own = flaggedAlone === n ? `all ${n} are flagged on their own too`
     : `${flaggedAlone} of them ${flaggedAlone === 1 ? "is" : "are"} flagged on ${flaggedAlone === 1 ? "its" : "their"} own too`;
   const text = flaggedAlone === 0
-    ? `${n} readings in ${region} moved the wrong way this week, none far enough alone. Together they're worth a check: ${list}.`
-    : `${n} readings in ${region} moved the wrong way this week; ${own}. Together they're worth a check: ${list}.`;
+    ? `${n} readings in ${region} moved the wrong way since pre-flight, none far enough alone. Together they're worth a check: ${list}.`
+    : `${n} readings in ${region} moved the wrong way since pre-flight; ${own}. Together they're worth a check: ${list}.`;
   return { n, items, flaggedAlone, text };
 }
 

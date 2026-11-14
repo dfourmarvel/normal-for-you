@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+<<<<<<< HEAD
   --bg-canvas: #F7F4F0;
   --bg-card: #FFFFFF;
   --bg-card-muted: #FBF9F7;
@@ -126,4 +127,28 @@ model-viewer {
 
 [data-theme="dark"] model-viewer {
   background: var(--bg-card);
+=======
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+>>>>>>> 3abde7629b6cfeb66c0ae4db3ad9c4033cace3a1
 }

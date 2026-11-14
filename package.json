@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+<<<<<<< HEAD
     "lint": "eslint"
+=======
+    "lint": "eslint",
+    "test": "vitest run"
+>>>>>>> 3abde7629b6cfeb66c0ae4db3ad9c4033cace3a1
   },
   "dependencies": {
     "next": "16.4.6",
@@ -15,12 +20,21 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",
+<<<<<<< HEAD
     "@types/node": "^20",
+=======
+    "@types/node": "^24.19.2",
+>>>>>>> 3abde7629b6cfeb66c0ae4db3ad9c4033cace3a1
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
+<<<<<<< HEAD
     "typescript": "^5"
+=======
+    "typescript": "^5",
+    "vitest": "^5.1.0"
+>>>>>>> 3abde7629b6cfeb66c0ae4db3ad9c4033cace3a1
   }
 }

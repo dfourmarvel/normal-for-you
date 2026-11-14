@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+<<<<<<< HEAD
+=======
+
+# foreman ledger
+/.foreman/
+/.vitest/
+>>>>>>> 3abde7629b6cfeb66c0ae4db3ad9c4033cace3a1

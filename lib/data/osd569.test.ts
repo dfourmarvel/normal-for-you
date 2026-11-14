@@ -121,13 +121,22 @@ describe("rows that cannot be checked", () => {
     expect(corrections[0].kind).toBe("shifted");
   });
 
-  it("blank WBC with a filled differential: lymphocyte and neutrophil counts are left out, platelets and haemoglobin kept", () => {
+  it("blank WBC with a filled differential: lymphocyte, neutrophil and platelet counts are left out, haemoglobin kept", () => {
     const out = parseOsd569(withCells({ [WBC]: "" }));
     const c = out.corrections.find((x) => x.sample === firstRow);
     expect(c?.kind).toBe("unverifiable");
-    expect(c?.changes.map((ch) => [ch.indicator, ch.usedValue])).toEqual([["lymphAbs", null], ["neutAbs", null]]);
+    expect(c?.changes.map((ch) => [ch.indicator, ch.usedValue])).toEqual([["lymphAbs", null], ["neutAbs", null], ["plt", null]]);
     expect(c?.changes[0].reason).toContain("total white count is blank");
-    expect(ids(out)).toEqual(new Set(["hb", "plt"]));
+    expect(c?.changes[2].reason).toContain("platelet count can't be trusted");
+    expect(ids(out)).toEqual(new Set(["hb"]));
+  });
+
+  it("blank WBC on a column-shifted row: the platelet cell is not kept", () => {
+    // C001 L-3 with its neutrophil count written into the lymphocyte cell, and the WBC blank.
+    const out = parseOsd569(withCells({ [WBC]: "", absolute_lymphocytes_value_cells_per_microliter: "3570" }));
+    expect(out.corrections.find((x) => x.sample === firstRow)?.kind).toBe("unverifiable");
+    expect(out.readings.find((r) => r.id === `${firstRow}_plt`)).toBeUndefined();
+    expect(ids(out)).toEqual(new Set(["hb"]));
   });
 
   it("blank WBC with a blank differential is not a correction", () => {

@@ -123,8 +123,12 @@ export function parseOsd569(csvText: string): Osd569 {
     };
 
     if (wbc === undefined && diff.some((d) => d.file !== undefined || d.pct !== undefined)) {
-      // Nothing to check the absolute counts against; platelets and haemoglobin are not part of this check.
-      leaveOut("The total white count is blank, so the white-cell counts in this row can't be checked.", ["lymphAbs", "neutAbs"]);
+      // Nothing to check the absolute counts against, so a column shift (which moves the platelet cell too) can't be ruled out.
+      // Haemoglobin is kept, as in the shifted-row rebuild below.
+      leaveOut(
+        "The total white count is blank, so this row can't be checked for shifted columns: its white-cell counts and its platelet count can't be trusted.",
+        ["lymphAbs", "neutAbs", "plt"],
+      );
     } else if (diff.some((d) => d.off)) {
       // One mismatch marks the row as column-shifted. Rebuild only if the WBC itself is trustworthy:
       // the percentages must add up to 100, and most file cells must be some percent × WBC (just in another column).

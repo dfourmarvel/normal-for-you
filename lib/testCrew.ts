@@ -73,15 +73,35 @@ const SCALE: Record<CrewIndicator, { unit: string; dp: number; every: number; mi
 const GROUND_CO2 = 0.3; // outdoor air, about 400 ppm
 const DAILY_DOSE = 0.5; // mSv per day, simulated
 
-// A plan for one reading: how far to move the centre the bad way (absolute units, given the size of the
-// person's own band on that side), and which band fractions to keep (f > 0 = the bad direction, 1 = band edge).
-interface Plan { shift: (side: number) => number; ok: (f: number) => boolean }
+// A only, the spec's construction ("wobble within ½ RCV"): draws from the real noise, redrawn when the change from A's
+// own baseline reaches 0.45 of A's own band on that side (the band the app shows). f > 0 = the bad direction, 1 = band edge.
+const A_KEEP = (f: number) => Math.abs(f) < 0.45;
 
-// Construction from the spec ("wobble within ½ RCV"): draws from the real noise, redrawn when the change from the
-// person's own baseline reaches 0.45 of their own band on that side (the band the app shows).
-const NOMINAL: Plan = { shift: () => 0, ok: (f) => Math.abs(f) < 0.45 };
-// The story windows below are the same construction: the drawn value is kept only inside the stated band fraction.
-const within = (lo: number, hi: number) => (f: number) => f >= lo && f < hi;
+// Measured, not designed: lib/testCrew.test.ts recomputes every number from the engine and fails if one changes.
+// Brain/sleep/mood region only; "flagged" = Watch or Act. Many-seed rows: seeds 1–100 per astronaut through simulateAstronaut.
+export interface DetectionFact { value: number | string; text: string }
+export const DETECTION_SUMMARY = {
+  bFirstFlagDay: { value: 41, text: "B: brain/sleep first flagged on day 41 (Watch, from reaction-test lapses alone)" },
+  bFlaggedDays43to60: { value: 13, text: "B: flagged on 13 of 18 days 43–60 (7 Watch, 6 Act from sleep alone)" },
+  bPeopleMajorityDays40to60: { value: 21, text: "B: on 21 of 21 days 40–60, most brain readings are inside the range for people" },
+  bCruiseFlaggedDays: { value: 0, text: "B: flagged on 0 of 36 cruise days 4–39, before the story starts" },
+  cFirstFlagDay: { value: 162, text: "C: brain/sleep first at Watch on day 162 of the pre-landing drift" },
+  cDay165: { value: "watch", text: "C: at Watch on day 165, through combined drift (sleep, fatigue, mood)" },
+  cFlaggedDays159to172: { value: 7, text: "C: at Watch on 7 of 14 days 159–172" },
+  cCruiseFlaggedDays: { value: 5, text: "C: at Watch on 5 of 155 cruise days 4–158, with no story (false alarms)" },
+  seedsBMedianFirstFlagDay: { value: 41, text: "100 simulated B's: median first flagged day 41" },
+  seedsBFlaggedBy43: { value: 0.9, text: "100 simulated B's: 90% flagged by day 43" },
+  seedsBFlaggedShare43to60: { value: 0.742, text: "100 simulated B's: flagged on 74.2% of days 43–60 (Act on 36.6%)" },
+  seedsBCruiseFalseAlarm: { value: 0.081, text: "100 simulated B's: flagged on 8.1% of cruise days 4–39 (false alarms)" },
+  seedsCMedianFirstFlagDay: { value: 163, text: "100 simulated C's: median first flagged day 163" },
+  seedsCDay165: { value: 0.65, text: "100 simulated C's: 65% flagged on day 165 (6% at Act)" },
+  seedsCFlaggedIn159to172: { value: 1, text: "100 simulated C's: 100% flagged on at least one day 159–172" },
+  seedsCFlaggedShare159to172: { value: 0.467, text: "100 simulated C's: flagged on 46.7% of days 159–172" },
+  seedsCCruiseFalseAlarm: { value: 0.101, text: "100 simulated C's: flagged on 10.1% of cruise days 4–158 (false alarms)" },
+  seedsCFlaggedIn145to158: {
+    value: 0.54, text: "100 simulated C's: 54% flagged on at least one of the 14 cruise days 145–158, with no story (chance level)",
+  },
+} as const satisfies Record<string, DetectionFact>;
 
 interface Profile {
   astronaut: Astronaut;
@@ -91,7 +111,9 @@ interface Profile {
   pre: Partial<Record<CrewIndicator, number[]>>; // integer scales: chosen pre-flight values (need spread)
   cabinCo2: number;
   priorDose: number;
-  plan?: (indicator: CrewIndicator, day: number) => Plan | undefined;
+  keep?: (f: number) => boolean; // A only: B and C take every draw as it comes (raw noise, no redraws)
+  // How far the story moves the mean the bad way on a day (absolute units), given the size of the person's own band on that side.
+  shift?: (indicator: CrewIndicator, day: number, side: number) => number;
 }
 
 const C_DRIFT = new Set<CrewIndicator>(["restingHR", "sleepHours", "moodPHQ2", "fatigueSP"]);
@@ -105,37 +127,41 @@ const PROFILES: Profile[] = [
     pre: { spo2: [97, 99, 98, 97, 99], fatigueSP: [2, 3, 2, 4, 3], moodPHQ2: [0, 1, 0, 2, 1], pvtLapses: [1, 2, 0, 3, 1] },
     cabinCo2: 2.2,
     priorDose: 0,
+    keep: A_KEEP,
   },
   {
     astronaut: { id: "B", name: "Test astronaut B", simulated: true },
     seed: 202,
-    story: "Sleep debt: from day 40, 1.5 h less sleep a night, fatigue and reaction-test lapses up, mood steady.",
+    story:
+      "Sleep debt: from day 40, sleep averages 1.5 h less a night and fatigue and reaction-test lapses average higher; mood steady. "
+      + "Each reading is raw day-to-day noise round those averages, so brain/sleep is flagged on "
+      + `${DETECTION_SUMMARY.bFlaggedDays43to60.value} of 18 days 43–60 (7 Watch, 6 Act), first on day ${DETECTION_SUMMARY.bFirstFlagDay.value}.`,
     base: { restingHR: 62, sbp: 98, dbp: 62, sleepHours: 8.8, bodyMass: 78.2, tempC: 36.5, glucose: 90 },
     pre: { spo2: [98, 97, 99, 98, 96], fatigueSP: [3, 2, 2, 3, 4], moodPHQ2: [1, 0, 0, 1, 2], pvtLapses: [2, 1, 0, 1, 3] },
     cabinCo2: 2.4,
     priorDose: 35,
-    plan: (ind, day) => {
-      if (day < 40) return undefined;
-      // The 3-night average holds the full drop from day 42; until then it only must not pass the band.
-      if (ind === "sleepHours") return { shift: () => 1.5, ok: day < 42 ? (f) => Math.abs(f) < 1 : within(0.5, 1) };
-      if (ind === "fatigueSP" || ind === "pvtLapses") return { shift: (side) => 0.6 * side, ok: within(0.5, 1) };
-      return undefined;
+    // Each night from day 40 is 1.5 h shorter, so the 3-night average holds the full drop from day 42.
+    shift: (ind, day, side) => {
+      if (day < 40) return 0;
+      if (ind === "sleepHours") return 1.5;
+      return ind === "fatigueSP" || ind === "pvtLapses" ? 0.6 * side : 0;
     },
   },
   {
     astronaut: { id: "C", name: "Test astronaut C", simulated: true },
     seed: 303,
     story:
-      "Combined drift: from day 159, three weeks before landing, resting heart rate, sleep, mood and fatigue each slide about 0.6 of C's own band the wrong way over 7 days, all inside NASA limits. A crewmate's buddy check says \"seems withdrawn\".",
+      "Combined drift: from day 159, three weeks before landing, the averages of resting heart rate, sleep, mood and fatigue slide "
+      + "to 0.6 of C's own band the wrong way over 7 days and stay there; each reading is raw day-to-day noise round them, and none "
+      + `passes a NASA limit. Brain/sleep is at Watch on ${DETECTION_SUMMARY.cFlaggedDays159to172.value} of 14 days 159–172, first on day `
+      + `${DETECTION_SUMMARY.cFirstFlagDay.value}, and on day 165; with no story it was at Watch on `
+      + `${DETECTION_SUMMARY.cCruiseFlaggedDays.value} of 155 cruise days. A crewmate's buddy check says "seems withdrawn".`,
     base: { restingHR: 56, sbp: 100, dbp: 66, sleepHours: 8.6, bodyMass: 64.5, tempC: 36.7, glucose: 86 },
     pre: { spo2: [98, 99, 97, 98, 99], fatigueSP: [2, 3, 3, 2, 4], moodPHQ2: [0, 0, 1, 1, 2], pvtLapses: [0, 1, 2, 1, 2] },
     cabinCo2: 2.3,
     priorDose: 12,
-    plan: (ind, day) => {
-      if (day < PRE_LANDING_START || !C_DRIFT.has(ind)) return undefined;
-      const frac = 0.6 * Math.min(1, (day - 158) / 7);
-      return { shift: (side) => frac * side, ok: day < 165 ? (f) => f > -0.45 && f < 0.75 : within(0.5, 0.75) };
-    },
+    // The mean slides linearly to 0.6 of C's own band over days 159–165, then stays there.
+    shift: (ind, day, side) => (day < PRE_LANDING_START || !C_DRIFT.has(ind) ? 0 : 0.6 * Math.min(1, (day - 158) / 7) * side),
   },
 ];
 
@@ -154,8 +180,8 @@ const round = (v: number, dp: number): number => Math.round(v * 10 ** dp) / 10 *
 const mean = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
 const missionDays = (every: number): number[] => Array.from({ length: Math.floor(MISSION_DAYS / every) + 1 }, (_, i) => i * every);
 
-function generate(p: Profile): Reading[] {
-  const rand = mulberry32(p.seed);
+function generate(p: Profile, seed = p.seed): Reading[] {
+  const rand = mulberry32(seed);
   const gauss = () => Math.sqrt(-2 * Math.log(1 - rand())) * Math.cos(2 * Math.PI * rand()); // Box–Muller
   const id = p.astronaut.id;
   const out: Reading[] = [];
@@ -207,13 +233,12 @@ function generate(p: Profile): Reading[] {
 
     if (ind === "sleepHours") [-2, -1].forEach((n) => night(n, base));
     for (const day of days) {
-      const plan = p.plan?.(ind, day) ?? NOMINAL;
-      const centre = base + dir * plan.shift(side);
+      const centre = base + dir * (p.shift?.(ind, day, side) ?? 0);
       for (let tries = 0; ; tries++) {
-        if (tries === 1000) throw new Error(`${id} ${ind} day ${day}: no draw inside the plan`);
+        if (tries === 1000) throw new Error(`${id} ${ind} day ${day}: no draw inside half the band`);
         if (ind === "sleepHours") night(day, centre);
         const value = ind === "sleepHours" ? sleepAt(day) : draw(ind, centre);
-        if (plan.ok(fraction(value))) {
+        if (!p.keep || p.keep(fraction(value))) {
           out.push(mk(ind, day, value));
           break;
         }
@@ -223,9 +248,14 @@ function generate(p: Profile): Reading[] {
   return out;
 }
 
+// One astronaut's readings from any seed: the same construction the fixed crew uses, for measuring across many seeds.
+export function simulateAstronaut(id: "A" | "B" | "C", seed?: number): Reading[] {
+  return generate(PROFILES.find((p) => p.astronaut.id === id)!, seed);
+}
+
 export const TEST_CREW: Astronaut[] = PROFILES.map((p) => p.astronaut);
 export const TEST_STORIES: Record<string, string> = Object.fromEntries(PROFILES.map((p) => [p.astronaut.id, p.story]));
-export const TEST_READINGS: Reading[] = PROFILES.flatMap(generate);
+export const TEST_READINGS: Reading[] = PROFILES.flatMap((p) => generate(p));
 
 // Launch is a Monday and 161 = 23 weeks, so day 161 is the Monday of its week. Data only: the engine does not read buddy checks yet.
 export const TEST_BUDDY_CHECKS: BuddyCheck[] = [

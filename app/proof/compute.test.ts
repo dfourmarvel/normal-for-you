@@ -91,6 +91,13 @@ describe("honest wording on the proof page", () => {
     expect(closeCall({ changePct: -20 })).toBeNull();
   });
 
+  it("close call: the printed gap and side agree, never 0.0 or 1.0 points", () => {
+    expect(closeCall({ changePct: -36.34, rcvPct: -36.3 })).toBe("Close call: −36.3% against a limit of −36.3%, 0.04 points past the limit.");
+    expect(closeCall({ changePct: -36.26, rcvPct: -36.3 })).toBe("Close call: −36.3% against a limit of −36.3%, 0.04 points inside the band.");
+    expect(closeCall({ changePct: -37.26, rcvPct: -36.3 })).toBeNull(); // 0.96 prints as 1.0, so not under 1 point
+    expect(closeCall({ changePct: -36.3, rcvPct: -36.3 })).toBe("Close call: −36.3% against a limit of −36.3%, less than 0.01 points inside the band.");
+  });
+
   it("dropped draw: C003 platelets say which draw was left out; nobody else gets a note", () => {
     const note = "Not enough pre-flight draws: the L-92 draw was left out (see the data note)";
     expect(view("plt").crew.map((c) => [c.id, c.baseNote])).toEqual([["C001", undefined], ["C002", undefined], ["C003", note], ["C004", undefined]]);
@@ -102,6 +109,17 @@ describe("honest wording on the proof page", () => {
       "Personal bands use 3 pre-flight draws each (C003: 2, too few for a band); the method papers recommend 5 for a trend check.",
     );
     expect(preflightDrawsSentence(view("lymphAbs"))).toBe("Personal bands use 3 pre-flight draws each; the method papers recommend 5 for a trend check.");
+  });
+
+  it("pre-flight draw counts: every crew member under 3 draws is called too few for a band", () => {
+    const v = view("lymphAbs");
+    const keep = (n: number) => (c: (typeof v.crew)[number]) => ({ ...c, draws: [...c.draws.filter((d) => d.phase === "preflight").slice(0, n), ...c.draws.filter((d) => d.phase !== "preflight")] });
+    expect(preflightDrawsSentence({ ...v, crew: v.crew.map(keep(2)) })).toBe(
+      "Each crew member has 2 pre-flight draws, too few for a band (a band needs 3); the method papers recommend 5 for a trend check.",
+    );
+    expect(preflightDrawsSentence({ ...v, crew: v.crew.map((c, i) => keep(i === 0 ? 1 : 2)(c)) })).toBe(
+      "No crew member has more than 2 pre-flight draws, too few for a band (a band needs 3); the method papers recommend 5 for a trend check.",
+    );
   });
 
   it("data note words each kind of row correctly", () => {

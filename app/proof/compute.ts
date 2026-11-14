@@ -166,6 +166,10 @@ export function preflightDrawsSentence(m: MarkerView): string {
   const counts = m.crew.map((c) => ({ id: c.id, n: c.draws.filter((d) => d.phase === "preflight").length }));
   const most = Math.max(...counts.map((c) => c.n));
   const fewer = counts.filter((c) => c.n !== most);
+  if (most < MIN_BASELINE_READINGS) {
+    const draws = `pre-flight draw${most === 1 ? "" : "s"}`;
+    return `${fewer.length ? `No crew member has more than ${most} ${draws}` : `Each crew member has ${most} ${draws}`}, too few for a band (a band needs ${MIN_BASELINE_READINGS}); the method papers recommend 5 for a trend check.`;
+  }
   const note = fewer.length
     ? ` (${fewer.map((c) => `${c.id}: ${c.n}`).join(", ")}${fewer.some((c) => c.n < MIN_BASELINE_READINGS) ? ", too few for a band" : ""})`
     : "";
@@ -173,11 +177,16 @@ export function preflightDrawsSentence(m: MarkerView): string {
 }
 
 /** A plain line when the first post-flight change sits within 1 percentage point of its limit, either side; null otherwise. */
+// The side and the printed gap both come from the unrounded numbers, and the 1-point cut is made on the printed gap,
+// so the line never says "0.0 points" or "1.0 points".
 export function closeCall({ changePct, rcvPct }: Pick<Answer, "changePct" | "rcvPct">): string | null {
-  if (changePct === undefined || rcvPct === undefined || Math.abs(changePct - rcvPct) >= 1) return null;
-  const gap = Math.abs(Number(changePct.toFixed(1)) - Number(rcvPct.toFixed(1))).toFixed(1);
-  const inside = Math.abs(changePct) <= Math.abs(rcvPct);
-  return `Close call: ${fmtPct(changePct, 1)} against a limit of ${fmtPct(rcvPct, 1)}, ${gap} points ${inside ? "inside the band" : "past the limit"}.`;
+  if (changePct === undefined || rcvPct === undefined) return null;
+  const past = Math.abs(changePct) - Math.abs(rcvPct); // rcvPct is the limit on the side the change went
+  const gap1 = Math.abs(past).toFixed(1);
+  if (Number(gap1) >= 1) return null;
+  const gap2 = Math.abs(past).toFixed(2);
+  const gap = Number(gap1) > 0 ? gap1 : Number(gap2) > 0 ? gap2 : "less than 0.01";
+  return `Close call: ${fmtPct(changePct, 1)} against a limit of ${fmtPct(rcvPct, 1)}, ${gap} points ${past <= 0 ? "inside the band" : "past the limit"}.`;
 }
 
 /** The data-note opening, worded for the kinds of corrected rows present. */

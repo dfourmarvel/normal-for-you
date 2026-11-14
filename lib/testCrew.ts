@@ -82,11 +82,11 @@ const A_KEEP = (f: number) => Math.abs(f) < 0.45;
 export interface DetectionFact { value: number | string; text: string }
 export const DETECTION_SUMMARY = {
   bFirstFlagDay: { value: 41, text: "B: brain/sleep first flagged on day 41 (Watch, from reaction-test lapses alone)" },
-  bFlaggedDays43to60: { value: 13, text: "B: flagged on 13 of 18 days 43–60 (7 Watch, 6 Act from sleep alone)" },
+  bFlaggedDays43to60: { value: 13, text: "B: flagged on 13 of 18 days 43–60 (7 Watch, 6 Act: 5 from sleep, 1 from fatigue)" },
   bPeopleMajorityDays40to60: { value: 21, text: "B: on 21 of 21 days 40–60, most brain readings are inside the range for people" },
   bCruiseFlaggedDays: { value: 0, text: "B: flagged on 0 of 36 cruise days 4–39, before the story starts" },
   cFirstFlagDay: { value: 162, text: "C: brain/sleep first at Watch on day 162 of the pre-landing drift" },
-  cDay165: { value: "watch", text: "C: at Watch on day 165, through combined drift (sleep, fatigue, mood)" },
+  cDay165: { value: "watch", text: "C: at Watch on day 165: sleep 6.7 h is below the range for people, fatigue is past her own band, and sleep, fatigue and mood together count as combined drift" },
   cFlaggedDays159to172: { value: 7, text: "C: at Watch on 7 of 14 days 159–172" },
   cCruiseFlaggedDays: { value: 5, text: "C: at Watch on 5 of 155 cruise days 4–158, with no story (false alarms)" },
   seedsBMedianFirstFlagDay: { value: 41, text: "100 simulated B's: median first flagged day 41" },

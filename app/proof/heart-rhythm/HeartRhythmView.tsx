@@ -123,9 +123,10 @@ export function HeartRhythmView() {
           </li>
           <li>One 2-hour resting recording per person, at one point in time.</li>
           <li>
-            The number depends on recording length and settings. They were fixed before this run: whole recording, pattern
-            length {M}, tolerance {R_FRACTION} × the person&apos;s standard deviation. Shorter windows were looked at first: the
-            first 1,000, 2,000 and 4,000 beats gave p = 0.07, 0.29 and 0.007, so the two shortest showed a weaker age gap.
+            The number depends on recording length and settings. We tried four record lengths (the first 1,000, 2,000 and
+            4,000 beats, and the whole recording) before settling on whole recordings, with pattern length {M} and tolerance{" "}
+            {R_FRACTION} × the person&apos;s standard deviation. The three shorter windows gave p = 0.07, 0.29 and 0.007, so
+            the two shortest showed a weaker age gap. The p-value above is not adjusted for trying four lengths.
           </li>
           <li>These are healthy adults on Earth, not astronauts.</li>
           <li>
@@ -133,6 +134,7 @@ export function HeartRhythmView() {
             app have none, so for them it reads &ldquo;Not measured&rdquo;.
           </li>
           <li className="font-semibold">Screening, not a diagnosis.</li>
+          <li>Not clinically validated, and not a replacement for NASA medical personnel.</li>
         </ul>
       </section>
 
@@ -175,6 +177,9 @@ function Results({ people, summary }: { people: Person[]; summary: Summary }) {
     <>
       <p className="mt-6 max-w-2xl text-lg font-medium">{headline(summary)}</p>
       <p className="mt-2 max-w-2xl text-sm text-secondary">{chanceSentence(summary)}</p>
+      <p className="mt-1 max-w-2xl text-xs text-secondary">
+        We tried four record lengths before choosing whole recordings, so this p-value is not adjusted for that. See Honest limits below.
+      </p>
       {summary.failed.length > 0 && (
         <p className="mt-2 max-w-2xl text-sm">
           Left out, because the number can&apos;t be computed for them: {summary.failed.map((p) => p.id).join(", ")}.

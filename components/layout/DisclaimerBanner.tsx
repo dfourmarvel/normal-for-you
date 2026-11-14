@@ -2,10 +2,14 @@
 
 import { usePathname } from "next/navigation";
 
+// The /proof pages use real open data and carry their own limits, so the simulated-data banner would mislead there.
+export function showDisclaimerBanner(path: string): boolean {
+  return !(path === "/proof" || path.startsWith("/proof/"));
+}
+
 export function DisclaimerBanner() {
-  // The /proof pages use real open data and carry their own limits, so the simulated-data banner would mislead there.
   const path = usePathname();
-  if (path === "/proof" || path.startsWith("/proof/")) return null;
+  if (!showDisclaimerBanner(path)) return null;
   return (
     <div
       role="note"

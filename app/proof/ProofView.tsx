@@ -61,6 +61,9 @@ export function ProofView() {
             Inspiration4 crew blood counts, NASA OSDR study OSD-569
           </a>
         </p>
+        <p className="mt-2 text-xs text-secondary">
+          Experimental decision-support: not clinically validated, and not a replacement for NASA medical personnel.
+        </p>
       </header>
 
       <div role="group" aria-label="Blood marker" className="mt-6 flex flex-wrap gap-2">

@@ -161,7 +161,7 @@ describe("fix 6: combined drift ignores a change the phase table expects", () =>
   const t = tables({
     variation: heart.map((i) => population(i, "both")),
     phases: (["restingHR", "sbp", "dbp"] as const).map((indicator) =>
-      ({ phase: "first72h" as const, indicator, expected: "down" as const, note: SRC, source: SRC })),
+      ({ phase: "first72h" as const, indicator, expected: "down" as const, maxChangePct: 20, note: SRC, source: SRC })),
   });
   const fell = 100 * (1 + (0.6 * rcvLogNormal(10.9, 5.45, 1.96).downPct) / 100);
   const h = heart.flatMap((i) => [...pre(i), mk(i, 1, i === "spo2" ? 100 : fell, "first72h")]);

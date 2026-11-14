@@ -53,10 +53,13 @@ export function regionStatus(region: Region, astronautId: string, history: reado
     if (res.status !== "nominal") reasons.push(`${capitalize(label)}: ${res.verdict.action.saw || res.status}`);
 
     // The you-answer carries changePct and the RCV on the side the change went, so half-RCV is |rcvPct| / 2.
-    // A change the phase table expects is not drift.
+    // A change the phase table expects is not drift, but only when the row gives a size: with none, any fall would pass (as in evaluate.ts).
     const you = res.verdict.answers[1];
     const row = tables.variation.find((v) => v.indicator === indicator);
-    if (row && !res.today?.expectedMatch && you.changePct !== undefined && you.rcvPct !== undefined
+    const size = res.today?.phaseRow?.maxChangePct;
+    const expected = res.today?.expectedMatch === true && size !== undefined
+      && you.changePct !== undefined && Math.abs(you.changePct) <= size;
+    if (row && !expected && you.changePct !== undefined && you.rcvPct !== undefined
       && isBadDirection(row.badDirection, you.changePct) && Math.abs(you.changePct) >= Math.abs(you.rcvPct) / 2) {
       drifting.push(`${label} ${you.changePct > 0 ? "+" : "-"}${fmtNum(Math.abs(you.changePct))}%`);
     }

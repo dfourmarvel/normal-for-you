@@ -1,0 +1,50 @@
+BioTensor Q-Health — anatomical 3D dummy
+========================================
+
+Primary interactive asset
+-------------------------
+File:    ecorche.glb
+Also:    ecorche-preview.jpg (fallback still of the same model)
+         ecorche.structures.json (named mesh metadata)
+
+Source:  Écorché — https://github.com/Charleeh/ecorche
+License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+Demo:    https://charleeh.github.io/ecorche/
+
+Suggested credit line (required):
+  Écorché (github.com/Charleeh/ecorche), CC BY-SA 4.0. Based on BodyParts3D,
+  © The Database Center for Life Science, CC BY 4.0, and Z-Anatomy by
+  Gauthier Kervyn, CC BY-SA 4.0.
+
+Upstream datasets:
+  - BodyParts3D © The Database Center for Life Science — CC BY 4.0
+    https://dbarchive.biosciencedbc.jp/en/bodyparts3d/
+  - Z-Anatomy by Gauthier Kervyn — CC BY-SA 4.0
+    https://www.z-anatomy.com/
+
+Model notes:
+  - Full-body adult male skeleton + superficial/deep muscles (634 named meshes).
+  - Vertex colors: red muscle fibers, pale tendon/fascia, ivory bone.
+  - Units: metres, Y-up, figure faces +Z.
+  - Gap vs preferred hero: Cmdr. Elena Reyes is female-presenting; no CC
+    female full-body muscular GLB of comparable quality was available quickly.
+    This male CC BY-SA ecorché is the closest openly licensed full-body muscle
+    model used for the interactive 3D hero. A female still (generated original)
+    is kept only as a non-interactive style reference, not as the rotatable hero.
+
+Fallback still
+--------------
+ecorche-preview.jpg — official preview from the Écorché repo (same CC BY-SA 4.0).
+Shown only if WebGL / <model-viewer> fails. Not a stick figure.
+
+Optional style reference (NOT the 3D hero, NOT redistributed as the model)
+--------------------------------------------------------------------------
+anatomical-dummy-female-still.jpg — original AI-generated illustration created
+for this hackathon prototype (BioTensor). Not derived from the user's example
+attachment file; that attachment was used only as a style brief and is not
+shipped. No third-party stock license.
+
+Removed / not used as hero
+--------------------------
+anatomical-dummy.svg / muscular-system-raw.svg — Wikimedia Termininja
+Muscular_system.svg (CC BY-SA 3.0) grey plate; superseded by 3D ecorché.

@@ -1,0 +1,35 @@
+{
+  "crew_id": "cm-reyes",
+  "metric": "hrv_rmssd",
+  "unit": "ms",
+  "simulated": true,
+  "baseline_mean": 41,
+  "baseline_band": [36, 46],
+  "series": [
+    {"t": "D-6 00:00", "v": 43}, {"t": "D-6 06:00", "v": 40}, {"t": "D-6 12:00", "v": 42}, {"t": "D-6 18:00", "v": 39},
+    {"t": "D-5 00:00", "v": 41}, {"t": "D-5 06:00", "v": 38}, {"t": "D-5 12:00", "v": 40}, {"t": "D-5 18:00", "v": 37},
+    {"t": "D-4 00:00", "v": 39}, {"t": "D-4 06:00", "v": 36}, {"t": "D-4 12:00", "v": 38}, {"t": "D-4 18:00", "v": 35},
+    {"t": "D-3 00:00", "v": 37}, {"t": "D-3 06:00", "v": 34}, {"t": "D-3 12:00", "v": 36}, {"t": "D-3 18:00", "v": 33},
+    {"t": "D-2 00:00", "v": 35}, {"t": "D-2 06:00", "v": 33}, {"t": "D-2 12:00", "v": 34}, {"t": "D-2 18:00", "v": 32},
+    {"t": "D-1 00:00", "v": 34}, {"t": "D-1 06:00", "v": 31}, {"t": "D-1 12:00", "v": 33}, {"t": "D-1 18:00", "v": 30},
+    {"t": "D0 00:00", "v": 33}, {"t": "D0 06:00", "v": 32}, {"t": "D0 12:00", "v": 32}, {"t": "D0 18:00", "v": 31}
+  ],
+  "interactions": [
+    {"source": "HRV", "target": "Sleep", "weight": 0.82},
+    {"source": "Sleep", "target": "MSK load", "weight": 0.71},
+    {"source": "MSK load", "target": "HR rest", "weight": 0.54},
+    {"source": "CO₂ night", "target": "Sleep", "weight": 0.66},
+    {"source": "Radiation", "target": "HRV", "weight": 0.41},
+    {"source": "Exercise", "target": "MSK load", "weight": 0.78},
+    {"source": "Hydration", "target": "HR rest", "weight": 0.35},
+    {"source": "Isolation", "target": "Sleep", "weight": 0.48}
+  ],
+  "state_distribution": {
+    "bins": ["Stable", "Mild stress", "Coupled stress", "High uncertainty", "Recovery"],
+    "values": [18, 32, 27, 14, 9],
+    "active": "Coupled stress",
+    "entropy_index": 0.62,
+    "entropy_label": "Biological Entropy Index",
+    "experimental": true
+  }
+}

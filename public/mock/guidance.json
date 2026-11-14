@@ -1,0 +1,76 @@
+{
+  "crew_id": "cm-reyes",
+  "plan": [
+    {
+      "time": "08:30",
+      "title": "ARED lower-body resistive session",
+      "detail": "45 min · Protocol MSK-R3 · load progression +5%",
+      "actor": { "name": "Med Off. Chen", "initials": "MC" },
+      "type": "exercise"
+    },
+    {
+      "time": "11:00",
+      "title": "Fluid & electrolyte check-in",
+      "detail": "Hydration target 3.2 L · Na review vs baseline",
+      "actor": { "name": "Cmdr. Reyes", "initials": "ER" },
+      "type": "self"
+    },
+    {
+      "time": "14:15",
+      "title": "Sleep hygiene block scheduled",
+      "detail": "Blue-light filter · 90-min protected rest window",
+      "actor": { "name": "Med Off. Chen", "initials": "MC" },
+      "type": "sleep"
+    },
+    {
+      "time": "18:40",
+      "title": "Radiation sheltering drill (tabletop)",
+      "detail": "SPE contingency walkthrough · Storm shelter path",
+      "actor": { "name": "Mission Ops", "initials": "MO" },
+      "type": "radiation"
+    },
+    {
+      "time": "21:00",
+      "title": "Post-exercise HRV reassess",
+      "detail": "Compare RMSSD to morning baseline window",
+      "actor": { "name": "BioTensor", "initials": "BT" },
+      "type": "analysis"
+    }
+  ],
+  "countermeasures": [
+    {
+      "id": "cm-ared",
+      "title": "ARED resistive protocol",
+      "subtitle": "MSK-R3 · 45 min",
+      "icon": "🏋️",
+      "category": "exercise"
+    },
+    {
+      "id": "cm-hydrate",
+      "title": "Hydration & electrolytes",
+      "subtitle": "3.2 L · Na/K balance",
+      "icon": "💧",
+      "category": "hydration"
+    },
+    {
+      "id": "cm-sleep",
+      "title": "Sleep hygiene block",
+      "subtitle": "Protected 90-min rest",
+      "icon": "🌙",
+      "category": "sleep"
+    },
+    {
+      "id": "cm-rad",
+      "title": "Radiation sheltering",
+      "subtitle": "SPE contingency ready",
+      "icon": "🛡️",
+      "category": "radiation"
+    }
+  ],
+  "documents": [
+    { "title": "MSK deconditioning assessment", "type": "PDF", "size": "240 KB", "updated": "Nov 5" },
+    { "title": "Personal baseline window (30d)", "type": "PDF", "size": "180 KB", "updated": "Nov 4" },
+    { "title": "Countermeasure adherence log", "type": "CSV", "size": "42 KB", "updated": "Nov 5" },
+    { "title": "Interaction graph export", "type": "JSON", "size": "96 KB", "updated": "Nov 5" }
+  ]
+}

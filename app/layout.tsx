@@ -1,33 +1,36 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Inter } from "next/font/google";
+import { AppShell } from "@/components/layout/AppShell";
+import { RoleProvider } from "@/lib/role-context";
+import { ThemeProvider } from "@/lib/theme-context";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-inter",
   subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Normal for you, normal for space",
-  description: "Astronaut self-check: normal for people, normal for you, normal for this mission day.",
+  title: "BioTensor Q-Health",
+  description:
+    "Experimental astronaut health monitoring & decision-support UI — NASA Space Apps 2026 prototype. Simulated data. Not for clinical or flight use.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+const themeBoot = `try{if(localStorage.getItem('biotensor-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark'}}catch(e){}`;
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-canvas font-sans text-charcoal">
-        <header className="border-b border-border bg-card">
-          <nav className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3">
-            <Link href="/" className="font-semibold tracking-tight">
-              Normal for you
-            </Link>
-            <Link href="/proof" className="text-sm text-secondary underline-offset-4 hover:text-charcoal hover:underline">
-              Proof
-            </Link>
-          </nav>
-        </header>
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
+      </head>
+      <body className={`${inter.variable} antialiased`}>
+        <ThemeProvider>
+          <RoleProvider>
+            <AppShell>{children}</AppShell>
+          </RoleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

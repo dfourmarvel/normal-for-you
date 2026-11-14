@@ -91,3 +91,6 @@ export type SolverResult = {
   hardBreaks: number;      // must be 0 to ship
   ms: number;
 };
+
+// Ransford's screen types (mock-data shapes for his screens), kept in their own file.
+export * from "./screen-types";

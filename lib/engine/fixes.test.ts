@@ -138,7 +138,7 @@ describe("fix 4: own pre-flight SD band (Coskun 2022 model 2)", () => {
     for (const i of members) expect(statusFor(A, i, h, cruise, t).status).toBe("nominal");
     const r = regionStatus("brainSleepMood", A, h, cruise, t);
     expect(r.status).toBe("watch");
-    expect(r.reasons.join(" ")).toContain("Combined drift: 3 readings moved the wrong way this week");
+    expect(r.reasons.join(" ")).toContain("Combined drift: 3 readings moved the wrong way since pre-flight");
   });
 });
 

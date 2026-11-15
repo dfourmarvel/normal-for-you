@@ -68,7 +68,7 @@ export function regionStatus(region: Region, astronautId: string, history: reado
   let status: Status = statuses.length === 0 ? "notMeasured" : worst(statuses);
 
   if (drifting.length >= COMBINED_DRIFT_MIN) {
-    reasons.push(`Combined drift: ${drifting.length} readings moved the wrong way this week: ${drifting.join(", ")}`);
+    reasons.push(`Combined drift: ${drifting.length} readings moved the wrong way since pre-flight: ${drifting.join(", ")}`);
     if (status === "nominal" || status === "notMeasured") status = "watch";
   }
   return { region, status, reasons };

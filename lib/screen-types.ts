@@ -118,11 +118,11 @@ export type Optimization = {
     name: string;
     description: string;
     variables: number;
-    constraints: number;
+    constraints?: number;
     objective: string;
   };
   solvers: Solver[];
-  comparison: {
+  comparison?: {
     objective_improvement_pct: number;
     speedup: number;
     same_feasibility: boolean;

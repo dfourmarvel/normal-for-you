@@ -1,47 +1,10 @@
 {
   "problem": {
-    "name": "Countermeasure schedule under resource constraints",
-    "description": "Allocate exercise, sleep protection, hydration, and sheltering windows across 4 crew for next 72h, subject to power, crew-time, and module occupancy constraints.",
-    "variables": 48,
-    "constraints": 23,
-    "objective": "Minimize coupled physiological stress score subject to feasibility"
+    "name": "Retired mock",
+    "description": "This file used to hold made-up solver results. Real results are worked out in the browser on the Optimization screen (simple plan and simulated annealing). Simulated bifurcation is not built, so it has no numbers.",
+    "variables": 896,
+    "objective": "See /optimization"
   },
-  "solvers": [
-    {
-      "id": "sb",
-      "name": "Simulated Bifurcation (SB)",
-      "family": "quantum-inspired classical",
-      "disclaimer": "Runs on classical hardware. Not a quantum computer.",
-      "runtime_ms": 142,
-      "objective_value": 0.318,
-      "feasibility": 1.0,
-      "iterations": 2400,
-      "energy_trace_end": -1842.5,
-      "winner": true
-    },
-    {
-      "id": "sa",
-      "name": "Simulated Annealing (classical)",
-      "family": "classical metaheuristic",
-      "disclaimer": "Baseline classical solver for comparison.",
-      "runtime_ms": 890,
-      "objective_value": 0.371,
-      "feasibility": 1.0,
-      "iterations": 12000,
-      "energy_trace_end": -1610.2,
-      "winner": false
-    }
-  ],
-  "comparison": {
-    "objective_improvement_pct": 14.3,
-    "speedup": 6.3,
-    "same_feasibility": true,
-    "notes": "SB found a lower stress objective with identical constraint satisfaction in ~1/6 the wall time on the same CPU host."
-  },
-  "recommendation_summary": [
-    "Prioritize Reyes ARED block at 08:30 (before high-CO₂ work window)",
-    "Park sleep-protection 21:00–06:00; defer noncritical science ops",
-    "Shared storm-shelter drill 18:40 — all crew",
-    "Okafor / Volkov maintain nominal resistive cadence"
-  ]
+  "solvers": [],
+  "recommendation_summary": []
 }

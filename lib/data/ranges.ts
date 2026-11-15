@@ -40,7 +40,7 @@ export const ranges: RangeRow[] = [
     critLow: { value: 91, inclusive: true },
     unit: "%",
     label: "NEWS2 Scale 1: normal ≥96%",
-    note: "Act edge is the NEWS2 score-3 band (≤91). BTS: any sudden fall of more than 3% needs assessment. Assumes sea-level pressure on room air; a reduced-pressure cabin needs its ppO2 (01c).",
+    note: "Act edge is the NEWS2 score-3 band (≤91). BTS: any sudden fall of more than 3% needs assessment. Assumes sea-level pressure on room air; a reduced-pressure cabin needs its ppO2.",
     source: "RCP NEWS2 Chart 1 (2017); BTS oxygen guideline 2017, Web Appendices 3 and 5",
   },
   {

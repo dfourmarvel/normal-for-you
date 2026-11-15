@@ -4,18 +4,17 @@ import { Button } from "@/components/shared/Button";
 import { Card } from "@/components/shared/Card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { StatusPill } from "@/components/shared/StatusPill";
-import { getCrew, getMission, getOptimization } from "@/lib/data";
+import { runWeek } from "@/components/optimization/realSchedule";
+import { getCrew, getMission } from "@/lib/data";
 
 export default function MissionPage() {
   const mission = getMission();
   const crew = getCrew();
-  const opt = getOptimization();
+  const week = runWeek(false); // real scheduler, run once when the page is built (fixed seed, so it repeats)
   const watches = crew.filter((c) => c.status === "watch").length;
   const attentions = crew.filter((c) => c.status === "attention").length;
   const env = mission.environment;
   const dq = mission.data_quality;
-  const sb = opt.solvers.find((s) => s.id === "sb");
-  const sa = opt.solvers.find((s) => s.id === "sa");
 
   return (
     <>
@@ -64,11 +63,11 @@ export default function MissionPage() {
           <Card>
             <div className="font-semibold text-[15px] mb-2">Optimization snapshot</div>
             <p className="text-sm text-secondary mb-3">
-              72h countermeasure schedule — Simulated Bifurcation vs classical
+              One exercise week, 4 crew, 1 treadmill, 1 bike · penalty, lower is better
             </p>
-            <Row label="SB objective" value={String(sb?.objective_value)} accent />
-            <Row label="Classical SA" value={String(sa?.objective_value)} />
-            <Row label="Speedup" value={`${opt.comparison.speedup}×`} />
+            <Row label="Simple plan" value={week.simple.penalty.toFixed(2)} />
+            <Row label="Simulated annealing" value={week.sa.penalty.toFixed(2)} />
+            <Row label="Simulated bifurcation" value="Not built" />
             <Link
               href="/optimization"
               className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-border bg-white px-4 py-2.5 text-[13px] font-semibold hover:bg-card-muted"

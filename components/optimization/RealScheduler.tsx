@@ -1,42 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/shared/Button";
 import { Card } from "@/components/shared/Card";
 import { Tag } from "@/components/shared/Tag";
-import { countHardBreaks } from "@/lib/scheduler/simple";
+import type { Assignment } from "@/lib/types";
 import { BenchmarkComparison } from "./BenchmarkComparison";
 import { OptimizationResults } from "./OptimizationResults";
 import { SolverPanel } from "./SolverPanel";
-import { STORM_SHELTER, runSmallCase, runWeek, type WeekRuns } from "./realSchedule";
+import { SA_SEED, STORM_SHELTER, runJob, slotTime, usualKept, type Job, type SmallCase, type WeekRuns } from "./realSchedule";
 
-type Data = { id: number; normal?: WeekRuns; storm?: WeekRuns; small?: ReturnType<typeof runSmallCase> };
+type Results = { id: number; normal?: WeekRuns; storm?: WeekRuns; small?: SmallCase };
 const STORM_LABEL = "Solar storm: shelter Tue 10:00–14:00 (demo replay)";
+const SHELTER_DAY = STORM_SHELTER[0].day;
+const SOLVERS = [["sa", "Simulated annealing"], ["simple", "Simple plan"]] as const;
+const inShelter = (a: Assignment) => STORM_SHELTER.some((b) => b.day === a.day && b.slot === a.slot);
+const listSessions = (list: Assignment[]) =>
+  list.length
+    ? [...list].sort((a, b) => a.slot - b.slot).map((a) => `${a.crewId} ${slotTime(a.slot)} ${a.machine}`).join(", ")
+    : "none";
 
 export function RealScheduler() {
   const [runId, setRunId] = useState(0);
   const [storm, setStorm] = useState(false);
   const [plan, setPlan] = useState<"sa" | "simple">("sa");
-  const [data, setData] = useState<Data>({ id: -1 });
+  const [data, setData] = useState<Results>({ id: 0 });
+  const [workerFailed, setWorkerFailed] = useState(false);
+  const worker = useRef<Worker | null>(null);
+  const sent = useRef(new Set<string>());
 
-  const fresh = data.id === runId;
-  const needed = !fresh || !data.normal || (storm && !data.storm);
+  // A result from an older run is dropped; the first result of a newer run starts a fresh set.
+  const deliver = useCallback((id: number, job: Job, result: WeekRuns | SmallCase) =>
+    setData((d) => (id < d.id ? d : { ...(d.id === id ? d : { id }), [job]: result })), []);
 
-  // Solvers run on the main thread after first paint, so "Running…" shows before the work starts.
+  // Solvers run in a background worker so the page stays usable; without one they fall back to the main thread.
   useEffect(() => {
-    if (!needed) return;
-    const timer = setTimeout(() => {
-      const next: Data = fresh ? { ...data } : { id: runId };
-      next.normal ??= runWeek(false);
-      if (storm) next.storm ??= runWeek(true);
-      next.small ??= runSmallCase();
-      setData(next);
-    }, 30);
-    return () => clearTimeout(timer);
-  }, [needed, fresh, data, runId, storm]);
+    const jobs = sent.current;
+    let w: Worker | null = null;
+    try {
+      w = new Worker(new URL("./scheduler.worker.js", import.meta.url), { type: "module" });
+      w.onmessage = (e) => deliver(e.data.runId, e.data.job, e.data.result);
+      w.onerror = () => {
+        w?.terminate();
+        worker.current = null;
+        jobs.clear();
+        setWorkerFailed(true);
+      };
+    } catch {
+      w = null;
+    }
+    worker.current = w;
+    return () => {
+      w?.terminate();
+      worker.current = null;
+      jobs.clear();
+    };
+  }, [deliver]);
 
-  const week = fresh ? (storm ? data.storm : data.normal) : undefined;
-  const small = fresh ? data.small : undefined;
+  const have: Results = data.id === runId ? data : { id: runId };
+  const missing = (["normal", "small", ...(storm ? ["storm"] : [])] as Job[]).filter((j) => !have[j]).join(",");
+
+  useEffect(() => {
+    if (!missing) return;
+    for (const job of missing.split(",") as Job[]) {
+      const key = `${runId}:${job}`;
+      if (sent.current.has(key)) continue;
+      sent.current.add(key);
+      if (worker.current) worker.current.postMessage({ runId, job });
+      else setTimeout(() => deliver(runId, job, runJob(job)), 30); // after "Running…" has painted
+    }
+  }, [missing, runId, deliver, workerFailed]);
+
+  const week = storm ? have.storm : have.normal;
+  const small = have.small;
+  const normal = have.normal;
 
   return (
     <>
@@ -75,7 +112,7 @@ export function RealScheduler() {
       <div aria-live="polite">
         {!week || !small ? (
           <Card className="mb-5">
-            <p className="text-sm font-medium">Running… (solvers are working in this browser)</p>
+            <p className="text-sm font-medium">Running… (the solvers are working in this browser; this takes a few seconds on a phone)</p>
           </Card>
         ) : (
           <>
@@ -86,14 +123,30 @@ export function RealScheduler() {
               <BenchmarkComparison week={week} />
             </div>
 
-            {storm && data.normal && (
+            {storm && normal && (
               <Card className="mb-5">
-                <div className="font-semibold text-[15px] mb-2">Storm re-plan</div>
-                <p className="text-sm text-secondary">
-                  Before: the normal SA plan would break {countHardBreaks(data.normal.sa.assignments, STORM_SHELTER)} hard
-                  rules and the simple plan {countHardBreaks(data.normal.simple.assignments, STORM_SHELTER)} inside the
-                  shelter window. After re-planning: SA {week.sa.hardBreaks}, simple plan {week.simple.hardBreaks}.
-                </p>
+                <div className="font-semibold text-[15px] mb-3">Storm re-plan</div>
+                <div className="grid md:grid-cols-3 gap-4 text-sm">
+                  <StormStep title="Before: sessions in Tue 10:00–14:00">
+                    {SOLVERS.map(([key, name]) => (
+                      <span key={key} className="block">
+                        {name}: {listSessions(normal[key].assignments.filter(inShelter))}
+                      </span>
+                    ))}
+                  </StormStep>
+                  <StormStep title="During: Tue 10:00–14:00">
+                    All 4 crew in the shelter. Sessions left in this window after re-planning:{" "}
+                    {SOLVERS.map(([key, name]) => `${name} ${week[key].assignments.filter(inShelter).length}`).join(", ")}.
+                  </StormStep>
+                  <StormStep title="After: Tuesday in the re-plan">
+                    {SOLVERS.map(([key, name]) => (
+                      <span key={key} className="block">
+                        {name}: {listSessions(week[key].assignments.filter((a) => a.day === SHELTER_DAY))}
+                        {" "}({week[key].hardBreaks} hard breaks in the week)
+                      </span>
+                    ))}
+                  </StormStep>
+                </div>
               </Card>
             )}
 
@@ -124,19 +177,33 @@ export function RealScheduler() {
             </Card>
 
             <Card className="mb-5">
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="font-semibold text-[15px]">Small case: exact check</div>
-                <Tag tone={small.match ? "teal" : "coral"}>{small.match ? "✓ SA matches exact" : "✗ SA differs"}</Tag>
+                <Tag tone={small.match ? "teal" : "coral"}>
+                  {small.match ? "✓ SA found the best plan" : `✗ SA missed the best plan by ${small.gap.toFixed(2)}`}
+                </Tag>
               </div>
               <p className="text-sm text-secondary mt-2 mb-3">
-                Obed&apos;s {small.variables}-variable test model (it checks the solvers, not a crew schedule). Brute
-                force tries every combination.
+                {small.variables} real choices cut from this week&apos;s model: crew A and B, Monday, the four 1-hour
+                slots from 06:00 to 10:00, both machines. Every other choice in the week is switched off, so this
+                checks the solvers; it is not a plan to follow. Brute force tries every on/off combination, so its
+                answer is the true best. Scores are high because the empty rest of the week counts as missed weekly
+                targets.
               </p>
               <div className="space-y-1.5 text-sm">
                 <Row label="Combinations checked" value={small.checked.toLocaleString()} />
-                <Row label="Brute force optimum" value={`${small.exactEnergy} in ${small.exactMs.toFixed(1)} ms`} />
-                <Row label="Simulated annealing" value={`${small.saEnergy} in ${small.saMs.toFixed(1)} ms`} />
+                <Row label="Brute force (true best)" value={`${small.exactEnergy.toFixed(2)} in ${small.exactMs.toFixed(1)} ms`} />
+                <Row label={`Simulated annealing (seed ${SA_SEED})`} value={`${small.saEnergy.toFixed(2)} in ${small.saMs.toFixed(1)} ms`} />
+                <Row label="Usual slot kept" value={`brute force ${usualKept(small.exactPlan)}, SA ${usualKept(small.saPlan)}`} />
+                <Row label="SA with seeds 1–10" value={`${small.otherSeedsHit} of 10 found the best plan`} />
               </div>
+              {!small.match && (
+                <p className="text-sm text-secondary mt-3">
+                  Simulated annealing is a guided random search, so it can stop just short of the best answer. Brute
+                  force cannot miss, but it only works on tiny cases like this one: the full week has 2^{week.variables}{" "}
+                  combinations.
+                </p>
+              )}
             </Card>
 
             <SolverPanel week={week} />
@@ -144,6 +211,15 @@ export function RealScheduler() {
         )}
       </div>
     </>
+  );
+}
+
+function StormStep({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted mb-1">{title}</div>
+      <p className="text-secondary">{children}</p>
+    </div>
   );
 }
 

@@ -4,7 +4,6 @@ import { buildSchedulerQubo, evaluateQubo, type QuboInput, type QuboModel } from
 import { buildSimpleSchedule, countHardBreaks } from "@/lib/scheduler/simple";
 import { solveSimulatedAnnealing } from "@/lib/scheduler/sa";
 import { assignmentsFromBits, solveBruteForce } from "@/lib/scheduler/brute-force";
-import { createSixteenVariableFixture } from "@/lib/scheduler/fixtures";
 import { shelterBlocks } from "@/lib/environment/shelter";
 
 export const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -46,7 +45,10 @@ export function weekInput(storm: boolean): QuboInput {
 }
 
 export type Run = { assignments: Assignment[]; penalty: number; hardBreaks: number; ms: number };
-export type WeekRuns = { variables: number; terms: number; buildMs: number; simple: Run; sa: Run; blockedSlots: BlockedSlot[] };
+export type WeekRuns = {
+  variables: number; terms: number; buildMs: number; simple: Run; sa: Run; blockedSlots: BlockedSlot[];
+  otherSeedRange: number[];
+};
 
 function bitsOf(model: QuboModel, assignments: Assignment[]) {
   const index = new Map(model.variables.map((v, i) => [v.key, i]));
@@ -89,24 +91,85 @@ export function runWeek(storm: boolean): WeekRuns {
     ms: saMs,
   };
 
-  return { variables: model.variables.length, terms: model.quadratic.length, buildMs, simple, sa, blockedSlots: input.blockedSlots };
+  return {
+    variables: model.variables.length, terms: model.quadratic.length, buildMs, simple, sa, blockedSlots: input.blockedSlots,
+    otherSeedRange: OTHER_SEEDS[storm ? "storm" : "normal"],
+  };
 }
 
-export function runSmallCase() {
-  const fixture = createSixteenVariableFixture();
-  const [exact, exactMs] = timed(() => solveBruteForce(fixture));
-  const [annealed, saMs] = timed(() => solveSimulatedAnnealing(fixture, { seed: SA_SEED }));
-  const sameBits = exact.bits.every((b, i) => b === annealed.bits[i]);
+/** Crew A and B, Monday 06:00–09:00, both machines: 2 × 4 × 2 = 16 real choices from the week model. */
+export const SLICE = { crewIds: ["A", "B"], day: 0, slots: 4 };
+
+export function sliceQubo(full: QuboModel): { indices: number[]; model: QuboModel } {
+  const indices = full.variables.flatMap((v, i) =>
+    SLICE.crewIds.includes(v.crewId) && v.day === SLICE.day && v.slot < SLICE.slots ? [i] : []);
+  const local = new Map(indices.map((fullIndex, k) => [fullIndex, k]));
+  // Every other choice is fixed at 0, so its own term and every pair touching it drop out; the constant stays.
+  const quadratic = full.quadratic.flatMap((t) => {
+    const i = local.get(t.i);
+    const j = local.get(t.j);
+    return i === undefined || j === undefined ? [] : [{ i, j, weight: t.weight }];
+  });
   return {
-    variables: fixture.variables.length,
+    indices,
+    model: {
+      variables: indices.map((i) => full.variables[i]),
+      linear: indices.map((i) => full.linear[i]),
+      quadratic,
+      offset: full.offset,
+    },
+  };
+}
+
+// Measured with SA_ITERATIONS steps; realSchedule.test.ts re-runs these seeds and fails if the range drifts.
+export const OTHER_SEEDS = { seeds: [1, 2, 3, 4, 5], normal: [1.5, 5], storm: [0.75, 14.5] };
+
+export type SmallCase = {
+  variables: number;
+  checked: number;
+  exactEnergy: number;
+  exactMs: number;
+  exactBits: number[];
+  exactPlan: Assignment[];
+  saEnergy: number;
+  saMs: number;
+  saPlan: Assignment[];
+  gap: number;
+  match: boolean;
+  otherSeedsHit: number;
+};
+
+/** Sessions that land on the person's usual slot and machine (the preference reward in the QUBO). */
+export const usualKept = (plan: Assignment[]) =>
+  plan.filter((a) => USUAL[a.crewId]?.slot === a.slot && USUAL[a.crewId]?.machine === a.machine).length;
+
+const SLICE_OTHER_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+/** Brute force and SA on the same 16-variable slice of the normal week, so SA can be checked against the true best. */
+export function runSmallCase(): SmallCase {
+  const { model } = sliceQubo(buildSchedulerQubo(weekInput(false)));
+  const [exact, exactMs] = timed(() => solveBruteForce(model));
+  const [annealed, saMs] = timed(() => solveSimulatedAnnealing(model, { seed: SA_SEED, iterations: SA_ITERATIONS }));
+  const gap = annealed.energy - exact.energy;
+  return {
+    variables: model.variables.length,
     checked: exact.checked,
     exactEnergy: exact.energy,
     exactMs,
+    exactBits: [...exact.bits],
+    exactPlan: assignmentsFromBits(model, exact.bits),
     saEnergy: annealed.energy,
     saMs,
-    match: sameBits && exact.energy === annealed.energy,
+    saPlan: assignmentsFromBits(model, annealed.bits),
+    gap,
+    match: gap === 0,
+    otherSeedsHit: SLICE_OTHER_SEEDS.filter((seed) =>
+      solveSimulatedAnnealing(model, { seed, iterations: SA_ITERATIONS }).energy === exact.energy).length,
   };
 }
+
+export type Job = "normal" | "storm" | "small";
+export const runJob = (job: Job) => (job === "small" ? runSmallCase() : runWeek(job === "storm"));
 
 export type Cell = { sessions: { time: string; machine: Machine }[]; recovery: string | null; shelter: string | null };
 

@@ -1,6 +1,6 @@
 import { Card } from "@/components/shared/Card";
 import { Tag } from "@/components/shared/Tag";
-import { SA_ITERATIONS, SA_SEED, type Run, type WeekRuns } from "./realSchedule";
+import { OTHER_SEEDS, SA_ITERATIONS, SA_SEED, type Run, type WeekRuns } from "./realSchedule";
 
 export function BenchmarkComparison({ week }: { week: WeekRuns }) {
   const gap = week.simple.penalty - week.sa.penalty;
@@ -13,7 +13,7 @@ export function BenchmarkComparison({ week }: { week: WeekRuns }) {
       <SolverCard name="Simple plan" note="Fixed round-robin rota, the offline fallback. Scored on the same penalty function as SA." run={week.simple} />
       <SolverCard
         name="Simulated annealing"
-        note={`Same QUBO, ${SA_ITERATIONS.toLocaleString()} steps, seed ${SA_SEED} (same seed, same plan).`}
+        note={`Same QUBO, ${SA_ITERATIONS.toLocaleString()} steps, one fixed seed (${SA_SEED}), so the same plan every run. Other seeds score differently: seeds ${OTHER_SEEDS.seeds[0]}–${OTHER_SEEDS.seeds.at(-1)} scored ${week.otherSeedRange[0].toFixed(2)} to ${week.otherSeedRange[1].toFixed(2)} on this week (measured beforehand, not re-run here).`}
         run={week.sa}
       />
       <Card>

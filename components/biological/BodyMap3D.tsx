@@ -18,6 +18,7 @@ export function BodyMap3D({ activeLabel = "MSK legs" }: { activeLabel?: string }
   const [failed, setFailed] = useState(false);
   const [calloutHidden, setCalloutHidden] = useState(false);
   const [ready, setReady] = useState(false);
+  const [modelLoaded, setModelLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,8 +39,14 @@ export function BodyMap3D({ activeLabel = "MSK legs" }: { activeLabel?: string }
     const mv = viewerRef.current;
     if (!mv || !ready) return;
     const onError = () => setFailed(true);
+    const onLoad = () => setModelLoaded(true);
+    if (mv.loaded) setModelLoaded(true);
     mv.addEventListener("error", onError);
-    return () => mv.removeEventListener("error", onError);
+    mv.addEventListener("load", onLoad);
+    return () => {
+      mv.removeEventListener("error", onError);
+      mv.removeEventListener("load", onLoad);
+    };
   }, [ready]);
 
   function parseOrbit(s: string) {
@@ -106,6 +113,19 @@ export function BodyMap3D({ activeLabel = "MSK legs" }: { activeLabel?: string }
             reveal="auto"
             style={{ width: "100%", height: "640px", background: "#fff" }}
           />
+        )}
+
+        {/* The 13.7 MB model can take minutes on a slow connection; show the still until it arrives. */}
+        {!failed && !modelLoaded && (
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-white p-6 text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/models/ecorche-preview.jpg"
+              alt="Anatomical ecorché model (still while the 3D view loads)"
+              className="max-h-[520px] object-contain"
+            />
+            <p className="text-sm text-secondary mt-3" role="status">Loading the 3D view…</p>
+          </div>
         )}
 
         {failed && (

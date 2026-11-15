@@ -1,314 +1,107 @@
-"use client";
+# BioTensor Q-Health: normal for you, normal for space
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { FLIGHT_DAYS, loadOsd569, type Correction } from "@/lib/data/osd569";
-import { defaultTables, withLabRanges } from "@/lib/engine";
-import type { Answer, Indicator, Reading, Status } from "@/lib/types";
-import type { Tables } from "@/lib/data/tables";
-import { CrewChart } from "./CrewChart";
-import {
-  DATA_NOTE_ID, DATA_NOTE_WORDS, MARKERS, buildMarker, changeLabel, closeCall, correctionSentence, dataNoteIntro, fmtCv, fmtPct, fmtValue, preflightDrawsSentence, studyShape,
-  summarySentence, type CrewView, type MarkerView,
-} from "./compute";
+Live demo: https://normal-for-you.vercel.app (replace with the final submitted URL before judging)
 
-type Load =
-  | { state: "loading" }
-  | { state: "error"; message: string }
-  | { state: "ready"; readings: Reading[]; tables: Tables; corrections: Correction[] };
+Team HFm's entry for NASA Space Apps 2026, "Create Health Monitoring Software for Astronauts on Space Missions".
 
-const OSDR_URL = "https://osdr.nasa.gov/bio/repo/data/studies/OSD-569";
+Every reading an astronaut takes gets three answers: normal for people (reference range or NASA limit), normal for you (own pre-flight baseline, judged with laboratory medicine's reference change value), and normal for this day of the mission. Then one next step: carry on, re-check or act.
 
-export function ProofView() {
-  const [load, setLoad] = useState<Load>({ state: "loading" });
-  const [indicator, setIndicator] = useState<Indicator>("lymphAbs");
+## What is real and what is simulated
 
-  useEffect(() => {
-    let live = true;
-    loadOsd569()
-      .then(({ readings, ranges, corrections }) => live && setLoad({ state: "ready", readings, corrections, tables: withLabRanges(defaultTables, ranges) }))
-      .catch((e: unknown) => live && setLoad({ state: "error", message: e instanceof Error ? e.message : String(e) }));
-    return () => {
-      live = false;
-    };
-  }, []);
+Real:
 
-  const view = useMemo((): MarkerView | Error | null => {
-    if (load.state !== "ready") return null;
-    try {
-      return buildMarker(indicator, load.readings, load.tables, load.corrections);
-    } catch (e) {
-      return e instanceof Error ? e : new Error(String(e));
-    }
-  }, [load, indicator]);
+- NASA OSDR OSD-569 (Inspiration4) blood counts, shown on `/proof`. Two of the four crew changed by more than their personal reference change value the day after landing, while all 16 post-flight values stayed inside the lab's normal range.
+- PhysioNet Fantasia heartbeat intervals (20 young and 20 elderly healthy adults) on `/proof/heart-rhythm`. Sample entropy, worked out in the browser: young median 1.406, elderly 1.277; young higher entropy was separated by p = 0.0074.
 
-  const markerName = MARKERS.find((m) => m.indicator === indicator)?.label ?? indicator;
-  const shape = useMemo(() => (load.state === "ready" ? studyShape(load.readings) : null), [load]);
+Simulated:
 
-  return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
-      <header className="max-w-2xl">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-0.5 text-xs font-medium text-chip-nominal">
-          <svg aria-hidden="true" viewBox="0 0 8 8" className="h-2 w-2"><circle cx="4" cy="4" r="4" fill="currentColor" /></svg>
-          Real data
-        </span>
-        <h1 className="mt-3 text-[28px] leading-tight font-bold">Normal for people, not normal for you</h1>
-        <p className="mt-2 text-secondary">
-          A lab range covers the middle 95% of healthy people. One person&apos;s own normal is much narrower.
-        </p>
-        <p className="mt-2 text-sm text-secondary">
-          Real NASA data:{" "}
-          <a href={OSDR_URL} className="text-charcoal underline underline-offset-2 hover:text-chip-act" target="_blank" rel="noreferrer">
-            Inspiration4 crew blood counts, NASA OSDR study OSD-569
-          </a>
-        </p>
-        <p className="mt-2 text-xs text-secondary">
-          Experimental decision-support: not clinically validated, and not a replacement for NASA medical personnel.
-        </p>
-      </header>
+- The three test astronauts A, B and C (`lib/testCrew.ts`). They are made-up people. Day-to-day noise is sized from published within-person variation (sources below); where no figure was found, the code marks the value as estimated.
+- All mock data on the other screens (`lib/mock/`, `public/data/*.json`) and the telemetry, environment and scheduler demos. Screens label this as simulated.
 
-      <div role="group" aria-label="Blood marker" className="mt-6 flex flex-wrap gap-2">
-        {MARKERS.map((m) => {
-          const on = m.indicator === indicator;
-          return (
-            <button
-              key={m.indicator}
-              type="button"
-              aria-pressed={on}
-              onClick={() => setIndicator(m.indicator)}
-              className={`min-h-11 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                on ? "border-primary bg-primary-soft text-chip-act" : "border-border bg-card text-secondary hover:border-primary hover:text-charcoal"
-              }`}
-            >
-              {m.label}
-            </button>
-          );
-        })}
-      </div>
+## Prior work
 
-      <div aria-live="polite">
-        {load.state === "loading" && <Notice>Loading the OSD-569 blood counts…</Notice>}
-        {load.state === "error" && <Notice error>Could not load the NASA data file. {load.message}</Notice>}
-        {view instanceof Error && <Notice error>Could not work out this marker. {view.message}</Notice>}
-      </div>
+Built during the hackathon. All code in this submission was written from 14 Nov 2026 in a new repository. Before the hackathon, team members read background literature on biological variation and spaceflight immunology, looked at the public NASA OSD-569 blood-count data on 5 Nov, and built early demo screens. Ransford's concept screens under "More" started from his earlier mock-ups. The app name and the BioTensor Q-Health URL come from those earlier screens; every page served here is built from this repository. The Accra Local Lead told the team on 23 Oct that early preparation was allowed.
 
-      {view && !(view instanceof Error) && load.state === "ready" && <MarkerSection view={view} markerName={markerName} corrections={load.corrections} />}
+## Run it
 
-      <section aria-labelledby="limits" className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
-        <SectionLabel id="limits">Honest limits</SectionLabel>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-          <li>
-            {shape ? `${shape.crew} people, one ${FLIGHT_DAYS}-day flight (Inspiration4), ${shape.draws} draws each.` : `One ${FLIGHT_DAYS}-day flight (Inspiration4).`}{" "}
-            This shows the method on real data; it is not a medical finding.
-          </li>
-          <li>
-            {view && !(view instanceof Error)
-              ? preflightDrawsSentence(view)
-              : "Personal bands need at least 3 pre-flight draws; the method papers recommend 5 for a trend check."}
-          </li>
-          <li className="font-semibold">Screening, not a diagnosis.</li>
-        </ul>
-      </section>
-    </main>
-  );
-}
+```bash
+npm ci
+npm run dev      # development server
+npm test         # vitest
+npm run lint     # eslint
+npm run build    # static site in out/
+```
 
-function MarkerSection({ view, markerName, corrections }: { view: MarkerView; markerName: string; corrections: Correction[] }) {
-  return (
-    <>
-      <p className="mt-6 max-w-2xl text-lg font-medium">{summarySentence(view)}</p>
-      {view.range?.note && <p className="mt-2 max-w-2xl text-sm text-secondary">{view.range.note}</p>}
-      {corrections.length > 0 && <DataNote corrections={corrections} />}
+There is no server, database or login: `next.config.ts` sets `output: "export"`, so the build is a static site in `out/`.
 
-      <section aria-labelledby="crew" className="mt-6">
-        <SectionLabel id="crew">{markerName} vs own baseline</SectionLabel>
-        <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {view.crew.map((c) => (
-            <CrewCard key={c.id} crew={c} view={view} markerName={markerName} />
-          ))}
-        </div>
-      </section>
+## Sources and licences
 
-      <RcvCard view={view} markerName={markerName} />
-    </>
-  );
-}
+Where a source is cited in the code, the file is given so it can be checked. Codes like "01a", "01b", "01d" in the code refer to the team's internal research notes, which are not in this repo.
 
-function CrewCard({ crew, view, markerName }: { crew: CrewView; view: MarkerView; markerName: string }) {
-  const first = crew.post[0];
-  const [people, you] = first ? first.verdict.answers : [undefined, undefined];
-  const when = first?.label === "R+1" ? "Day after landing (R+1)" : `First draw after landing (${first?.label ?? "none"})`;
-  const close = you ? closeCall(you) : null;
-  const [noteBefore, noteAfter] = crew.baseNote?.split(DATA_NOTE_WORDS) ?? [];
-  return (
-    <article className="rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
-      <h3 className="text-lg font-semibold">Crew {crew.id}</h3>
-      <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <dt className="text-secondary">Baseline (median of pre-flight draws)</dt>
-          <dd className="mt-0.5 text-base font-semibold">
-            {crew.base !== null ? (
-              <span className="whitespace-nowrap">{fmtValue(crew.base)} {crew.unit}</span>
-            ) : noteAfter !== undefined ? (
-              <>
-                {noteBefore}
-                <a href={`#${DATA_NOTE_ID}`} className="underline underline-offset-2 hover:text-chip-act">{DATA_NOTE_WORDS}</a>
-                {noteAfter}
-              </>
-            ) : (
-              "Not enough pre-flight draws"
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-secondary">{when}</dt>
-          <dd className="mt-0.5 text-base font-semibold">
-            {first ? <span className="whitespace-nowrap">{fmtValue(first.verdict.reading.value)} {crew.unit}</span> : "No post-flight draw"}
-            {you?.changePct !== undefined && <span className="ml-1.5 inline-block font-medium text-secondary">({fmtPct(you.changePct, close ? 1 : 0)})</span>}
-          </dd>
-        </div>
-      </dl>
-      {close && <p className="mt-3 text-sm font-medium">{close}</p>}
-      {people && you && (
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
-          <AnswerBox question="Normal for people?" answer={people} />
-          <AnswerBox question="Normal for you?" answer={you} />
-        </div>
-      )}
-      <CrewChart crew={crew} range={view.range} markerName={markerName} />
-    </article>
-  );
-}
+### Data sets
 
-function DataNote({ corrections }: { corrections: Correction[] }) {
-  return (
-    <section id={DATA_NOTE_ID} aria-labelledby="data-note" className="mt-4 max-w-2xl scroll-mt-4 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
-      <SectionLabel id="data-note">Data note</SectionLabel>
-      <p className="mt-2 text-sm">{dataNoteIntro(corrections)}</p>
-      {corrections.map((c) => (
-        <div key={c.sample} className="mt-3">
-          <p className="text-sm">{correctionSentence(c)}</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-secondary">
-            {c.changes.map((ch) => (
-              <li key={ch.indicator}>
-                <span className="font-medium text-charcoal">{changeLabel(ch)}</span>: file {ch.fileValue === null ? "empty" : fmtValue(ch.fileValue)}, used{" "}
-                {ch.usedValue === null ? "none" : fmtValue(ch.usedValue)}. {ch.reason}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </section>
-  );
-}
+1. NASA OSDR OSD-569, Inspiration4 complete blood count: https://osdr.nasa.gov/bio/repo/data/studies/OSD-569 (`app/proof/ProofView.tsx:19`, `lib/data/osd569.ts`). Local copy: `public/data/LSDS-7_Complete_Blood_Count_CBC_TRANSFORMED.csv`.
+2. PhysioNet Fantasia Database v1.0.0, https://physionet.org/content/fantasia/1.0.0/ (DOI 10.13026/C2RG61), Open Data Commons Attribution License v1.0. Cite: Iyengar et al. 1996 and Goldberger et al. 2000.
+3. EFLM Biological Variation Database, within-person variation (CVI) for white cells, haemoglobin, platelets and fasting glucose, read 14 Nov 2026 (`lib/data/variation.ts`, `lib/testCrew.ts`). Licensed and cited as provided by the database.
+4. NASA-STD-3001 Vol 2 Rev F (2026-07-14) §6.2.1.3 (`lib/data/limits.ts:12`).
+5. NASA-STD-3001 Vol 1 Rev C (2023-09-15) §4.8 (`lib/data/limits.ts:30`).
+6. OCHMO-TB-004 Carbon Dioxide Rev D (10 Mar 2026) (`lib/data/limits.ts:21`).
+7. NASA HRP Evidence Reports: Cardiovascular 2022, Immune 2021, Nutrition 2020, Sleep (no year in code), Behavioral 2025, Hypoxia/DCS 2024, Muscle/aerobic 2024 (`lib/data/phases.ts`).
+8. NOAA solar radiation storm scale (`lib/environment/radiation.ts:4`) and the "DONKI" source tag (`lib/environment/types.ts:14`).
 
-function AnswerBox({ question, answer }: { question: string; answer: Answer }) {
-  return (
-    <div className="rounded-xl border border-border-soft bg-card-muted p-3">
-      <p className="text-sm font-medium">{question}</p>
-      <div className="mt-1.5">
-        <StatusChip status={answer.status} />
-      </div>
-      <p className="mt-1.5 text-xs text-secondary">{answer.compareTo}</p>
-    </div>
-  );
-}
+### Papers and guidelines
 
-const CHIP: Record<Status, { label: string; cls: string; icon: ReactNode }> = {
-  nominal: {
-    label: "Nominal",
-    cls: "bg-teal-soft text-chip-nominal",
-    icon: <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />,
-  },
-  watch: {
-    label: "Watch",
-    cls: "bg-yellow-soft text-chip-watch",
-    icon: (
-      <>
-        <path d="M8 1.5l7 13H1z" fill="currentColor" />
-        <path d="M8 6v4M8 12v.5" stroke="var(--yellow-soft)" strokeWidth="1.6" strokeLinecap="round" />
-      </>
-    ),
-  },
-  act: {
-    label: "Act",
-    cls: "bg-primary-soft text-chip-act",
-    icon: (
-      <>
-        <path d="M5 1h6l4 4v6l-4 4H5l-4-4V5z" fill="currentColor" />
-        <path d="M8 4.5v4.5M8 11.2v.3" stroke="var(--primary-soft)" strokeWidth="1.6" strokeLinecap="round" />
-      </>
-    ),
-  },
-  notMeasured: {
-    label: "Not measured",
-    cls: "bg-border-soft text-chip-none",
-    icon: <path d="M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />,
-  },
-};
+9. Coskun et al. 2022, model 2 (own variance, 5 or more results) (`lib/data/variation.ts:5`).
+10. Quer et al. 2020, PLOS ONE, Fitbit resting heart rate (`lib/data/variation.ts`, `lib/testCrew.ts:36`).
+11. Warren et al. 2010, Br J Gen Pract, office blood pressure (`lib/data/variation.ts`).
+12. Ohasama study, JAHA 2019 (PMC6761623), home blood pressure (`lib/testCrew.ts:34`).
+13. Messman et al. 2022, J Sleep Res 31(6):e13680, actigraphy (`lib/testCrew.ts`).
+14. Cheuvront et al. 2004, Int J Sport Nutr Exerc Metab, body mass (`lib/testCrew.ts`).
+15. Diamond et al. 2021, PLOS ONE (PMC7857558), oral temperature (`lib/testCrew.ts`).
+16. EuBIVAS glucose CVI 4.7% (`lib/data/variation.ts`, glucose row).
+17. Spodick 1996, South Med J (`lib/data/ranges.ts:15`).
+18. RCP NEWS2 Chart 1 (2017) and BTS oxygen guideline 2017 (`lib/data/ranges.ts`).
+19. ACC/AHA 2017 blood pressure guideline, kept in AHA/ACC 2025, via a CDC page reviewed 13 Oct 2026 (`lib/data/ranges.ts:24`).
+20. Geneva et al. 2019, Open Forum Infect Dis; CDC fever definition (15 May 2024) (`lib/data/ranges.ts:55`).
+21. ADA Standards of Care 2026, Section 2 and Section 6; WHO/IDF 2006 (`lib/data/ranges.ts:66`).
+22. Watson et al. 2015, AASM/SRS consensus statement, Sleep (`lib/data/ranges.ts:75`).
+23. Barger et al. 2014, Lancet Neurology (`lib/data/phases.ts`).
+24. Stahn et al. 2017, Scientific Reports (`lib/data/phases.ts`).
+25. Norsk et al. 2015, J Physiol (`lib/data/phases.ts`).
+26. Garrett-Bakelman et al. 2019, Science (`lib/data/phases.ts`).
+27. Kim et al. 2024, Nature Communications (`lib/data/phases.ts`).
 
-function StatusChip({ status }: { status: Status }) {
-  const c = CHIP[status];
-  return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${c.cls}`}>
-      <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5">{c.icon}</svg>
-      {c.label}
-    </span>
-  );
-}
+Some rows in `lib/data/phases.ts` are marked "(no source found)" in the code; the app shows them that way.
 
-function RcvCard({ view, markerName }: { view: MarkerView; markerName: string }) {
-  const { row, z, rcv } = view;
-  const direction =
-    row.badDirection === "both"
-      ? "Two-sided: either direction counts."
-      : row.indicator === "lymphAbs" && row.badDirection === "down"
-        ? "One-sided: a fall in lymphocytes after flight was named in advance from the literature. We first saw these drops on 5 Nov 2026 and say so."
-        : `One-sided: only a ${row.badDirection === "down" ? "fall" : "rise"} counts, named in advance from the literature.`;
-  const items: [string, string][] = [
-    ["Within-person variation (CVI)", fmtCv(row.cviPct)],
-    ["Lab measurement variation (CVA)", fmtCv(row.cvaPct)],
-    ["Z", z.toFixed(3)],
-    ["Change that counts: down", fmtPct(rcv.downPct, 1)],
-    ["Change that counts: up", fmtPct(rcv.upPct, 1)],
-  ];
-  return (
-    <section aria-labelledby="rcv" className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_3px_rgba(44,44,44,0.04)]">
-      <SectionLabel id="rcv">How the reference change value is worked out</SectionLabel>
-      <p className="mt-2 text-sm">
-        For {markerName.toLowerCase()}, a change from the personal baseline counts only if it is bigger than normal
-        day-to-day variation plus lab error. The band on each chart is the baseline moved by these limits
-        (log-normal reference change value, Fokkema 2006).
-      </p>
-      <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {items.map(([k, v]) => (
-          <div key={k} className="rounded-xl border border-border-soft bg-card-muted p-3">
-            <dt className="text-xs text-secondary">{k}</dt>
-            <dd className="mt-1 text-lg font-semibold">{v}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="mt-4 text-sm font-medium">{direction}</p>
-      <p className="mt-1 text-xs text-secondary">Direction source: {row.directionSource}</p>
-      <p className="mt-1 text-xs text-secondary">Variation source: {row.source}</p>
-    </section>
-  );
-}
+### 3D anatomy model
 
-function SectionLabel({ id, children }: { id: string; children: ReactNode }) {
-  return (
-    <h2 id={id} className="text-xs font-semibold tracking-[0.08em] text-secondary uppercase">
-      {children}
-    </h2>
-  );
-}
+- Écorché (https://github.com/Charleeh/ecorche), CC BY-SA 4.0, files `public/models/ecorche.glb`, `ecorche-preview.jpg` and `ecorche.structures.json`.
+- Based on BodyParts3D, © The Database Center for Life Science, CC BY 4.0 (https://dbarchive.biosciencedbc.jp/en/bodyparts3d/), and Z-Anatomy by Gauthier Kervyn, CC BY-SA 4.0 (https://www.z-anatomy.com/).
+- Full credit text: `public/models/dummy-LICENSE.txt`; it is also shown in the page footer (`components/layout/AppFooter.tsx`).
 
-function Notice({ children, error }: { children: ReactNode; error?: boolean }) {
-  return (
-    <p
-      role={error ? "alert" : undefined}
-      className={`mt-6 rounded-2xl border p-5 text-sm [overflow-wrap:anywhere] ${error ? "border-primary bg-primary-soft text-chip-act" : "border-border bg-card text-secondary"}`}
-    >
-      {children}
-    </p>
-  );
-}
+### npm libraries
+
+Licences read from `package-lock.json`:
+
+- next, react, react-dom, recharts, vitest, tailwindcss, eslint: MIT
+- @google/model-viewer, typescript: Apache-2.0
+- @tailwindcss/turbopack, @types/*, eslint-config-next: checked and listed in the project dependency metadata
+
+## Use of AI
+
+The concept and the science choices are the team's. The lab-medicine idea (personal baseline plus reference change value) is Daniel's. SI tools were used to build and check it, not to come up with it.
+
+Code: in Daniel's parts (the engine, the real-data proof pages, the simulated test astronauts, astronaut and scheduler screens), Claude (Anthropic) wrote most of the code under his direction and helped find and summarise sources, which we checked against the originals. Changes were checked with automated tests and an independent SI review, and the published numbers were recomputed separately. Obed (scheduler, environment and solver code) used ChatGPT for brainstorming, Gemini to check his work and GitHub Copilot for pages. Ransford (screens) used a Grok agent for the screens' visual layout and Cursor for front-end code.
+
+Data: every number on the real-data pages comes from NASA OSDR OSD-569 or PhysioNet Fantasia, computed by our code. Values on screens marked SIMULATED are made-up demo values.
+
+Video: the voice-over is SI-generated (ElevenLabs text-to-speech) from a script the team wrote; the video was assembled with SI assistance (Claude) from screen captures of our own app. It carries a visible watermark in every frame and the same statement in the file metadata and video description.
+
+## Team and licence
+
+Team HFm: dfourmarvel (Daniel), DeeCreates (Obed), DevBaba (Ransford), planet-5 (team lead).
+
+Code is Apache 2.0 (see `LICENSE`). Third-party data and models keep their own licences, listed above.
+
+Made by dfour (d4) and team HFm.
+

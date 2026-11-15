@@ -1,27 +1,75 @@
-import { RealScheduler } from "@/components/optimization/RealScheduler";
+import { Button } from "@/components/shared/Button";
+import { Card } from "@/components/shared/Card";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { SA_SEED, runSmallCase, runWeek } from "@/components/optimization/realSchedule";
 
-export default function OptimizationPage() {
+export default function BenchmarksPage() {
+  // Real scheduler, run once when the page is built; SA uses a fixed seed, so these repeat exactly.
+  const normal = runWeek(false);
+  const storm = runWeek(true);
+  const small = runSmallCase();
+  const ROWS = [
+    ["Full week, normal", String(normal.variables), normal.simple.penalty.toFixed(2), normal.sa.penalty.toFixed(2), "Too big to check", "Not built"],
+    ["Full week, solar storm", String(storm.variables), storm.simple.penalty.toFixed(2), storm.sa.penalty.toFixed(2), "Too big to check", "Not built"],
+    ["Slice: A and B, Mon 06:00–10:00", String(small.variables), "Not run", small.saEnergy.toFixed(2), small.exactEnergy.toFixed(2), "Not built"],
+  ];
   return (
     <>
       <PageHeader
-        title="Optimization"
-        subtitle="Crew exercise scheduling for one week · the plans below are worked out in your browser"
+        title="Benchmarks"
+        subtitle="Concept benchmark demo · values are made up · classical hardware only"
+        actions={<Button href="/optimization">Open live comparison</Button>}
       />
-
-      <div
-        role="note"
-        className="flex items-start gap-3 rounded-[14px] bg-[#F3EEF8] text-[#5A4A6A] px-4 py-3 mb-5 text-[12.5px] leading-relaxed"
-      >
-        <span aria-hidden>⚛️</span>
-        <div>
-          <strong>Both solvers run on an ordinary computer: this browser.</strong> The plan also names simulated
-          bifurcation, a quantum-inspired method that also runs on ordinary hardware; it is not built yet, so it shows
-          no numbers.
+      <Card className="mb-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-wide text-muted border-b border-border">
+                {["Instance", "Choices", "Simple plan", `SA (seed ${SA_SEED})`, "Brute force (exact)", "SB"].map(
+                  (h) => (
+                    <th key={h} className="py-2 pr-3 font-medium">
+                      {h}
+                    </th>
+                  )
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {ROWS.map((r) => (
+                <tr key={r[0]} className="border-b border-border-soft last:border-0">
+                  {r.map((c, i) => (
+                    <td key={i} className="py-3 pr-3">
+                      {c}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      </Card>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card>
+          <div className="font-semibold text-[15px] mb-2">Concept notes</div>
+          <p className="text-sm text-secondary">
+            These benchmark results are for a concept demo on a simulated crew week. Scores are illustrative only and are not a production claim.
+            The simulated bifurcation branch is not built, so it has no numbers.
+          </p>
+        </Card>
+        <Card>
+          <div className="font-semibold text-[15px] mb-2">Simulation checklist</div>
+          <p className="text-sm leading-relaxed">
+            ✓ Same feasibility across solvers
+            <br />
+            ✓ Lower objective preferred
+            <br />
+            ✓ Simulated bifurcation marked “Not built”
+            <br />
+            ✓ Values shown are demo-only
+          </p>
+        </Card>
       </div>
-
-      <RealScheduler />
     </>
   );
 }
+

@@ -117,7 +117,7 @@ export function todayAnswer(reading: Reading, you: YouResult, ctx: EvalCtx, tabl
   const make = (status: Answer["status"], compareTo: string, expectedMatch = false): TodayResult =>
     ({ expectedMatch, phaseRow, answer: { question: "today", status, value, compareTo, ...carry, source: phaseRow?.source ?? "" } });
 
-  if (!phaseRow || phaseRow.expected === "noEvidence") return make(youStatus, "no clear evidence for this phase");
+  if (!phaseRow || phaseRow.expected === "noEvidence") return make(youStatus, "no known change for this phase, so the change from your normal stands");
   if (!you.limits) return make("notMeasured", "no biological-variation data");
 
   const within = changePct >= you.limits.downPct && changePct <= you.limits.upPct;

@@ -24,6 +24,8 @@ interface Props {
 const SECONDARY_BTN = `min-h-[44px] rounded-full border border-border bg-card px-4 text-sm font-semibold text-charcoal hover:border-primary ${FOCUS}`;
 
 export function CheckForm({ day, dayDraft, onDay, onDayCommit, values, errors, formError, onChange, onSample, onCheck }: Props) {
+  const draft = dayDraft.trim();
+  const dayBad = draft !== "" && !(/^\d+$/.test(draft) && +draft >= FIRST_DAY && +draft <= LAST_DAY);
   return (
     <form
       noValidate
@@ -53,6 +55,7 @@ export function CheckForm({ day, dayDraft, onDay, onDayCommit, values, errors, f
               <input
                 type="number" inputMode="numeric" min={FIRST_DAY} max={LAST_DAY} value={dayDraft}
                 onChange={(e) => onDay(e.target.value)} onBlur={onDayCommit}
+                aria-invalid={dayBad || undefined} aria-describedby={dayBad ? "day-err" : undefined}
                 className={`min-h-[44px] w-20 rounded-lg border border-border bg-card px-2 text-[16px] ${FOCUS}`}
               />
             </label>
@@ -61,6 +64,11 @@ export function CheckForm({ day, dayDraft, onDay, onDayCommit, values, errors, f
             <span className="font-semibold">Day {day} of {LAST_DAY}</span>
             <span className="text-secondary"> · {phaseLabel(day)}</span>
           </p>
+          {dayBad && (
+            <p id="day-err" className="mt-1 text-sm font-medium text-chip-act">
+              Mission day must be a whole number from {FIRST_DAY} to {LAST_DAY}.
+            </p>
+          )}
         </fieldset>
 
         {GROUPS.map((g) => (
@@ -109,7 +117,7 @@ function NumberField({ field: f, value, error, onChange }: { field: Field; value
           id={id} type="text" inputMode={f.whole ? "numeric" : "decimal"} autoComplete="off" enterKeyHint="next"
           value={value} onChange={(e) => onChange(f.indicator, e.target.value)}
           aria-invalid={error ? true : undefined} aria-describedby={described}
-          className="min-w-0 flex-1 bg-transparent px-3 py-2 text-[16px] outline-none"
+          className="min-h-[46px] min-w-0 flex-1 self-stretch bg-transparent px-3 text-[16px] outline-none"
         />
         <span aria-hidden="true" className="shrink-0 pr-3 text-sm text-secondary">{f.suffix}</span>
       </div>

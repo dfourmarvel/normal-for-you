@@ -79,7 +79,7 @@ export function TopNav() {
       {PRIMARY.map((n) => {
         const active = isActive(pathname, n.match);
         return (
-          <Link key={n.href} href={n.href} className={navLinkClass(active)}>
+          <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} className={navLinkClass(active)}>
             {n.label}
           </Link>
         );
@@ -109,6 +109,7 @@ export function TopNav() {
                   key={n.href}
                   href={n.href}
                   role="menuitem"
+                  aria-current={active ? "page" : undefined}
                   onClick={() => setMoreOpen(false)}
                   className={`block px-3 py-2.5 rounded-[10px] text-[13px] font-medium ${
                     active ? "bg-primary-soft text-primary font-semibold" : "text-charcoal hover:bg-card-muted"
@@ -164,7 +165,7 @@ export function TopNav() {
             {PRIMARY.map((n) => {
               const active = isActive(pathname, n.match);
               return (
-                <Link key={n.href} href={n.href} className={navLinkClass(active, true)}>
+                <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} className={navLinkClass(active, true)}>
                   {n.label}
                 </Link>
               );
@@ -173,7 +174,7 @@ export function TopNav() {
             {MORE.map((n) => {
               const active = n.href === moreHref;
               return (
-                <Link key={n.href} href={n.href} className={navLinkClass(active, true)}>
+                <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} className={navLinkClass(active, true)}>
                   {n.label}
                 </Link>
               );

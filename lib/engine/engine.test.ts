@@ -129,7 +129,7 @@ describe("today-answer and the overall exception", () => {
 
   it("noEvidence leaves the status equal to the you-answer", () => {
     const v = run(tables({ ...base, phases: [phaseRow("noEvidence")] }));
-    expect(v.answers[2]).toMatchObject({ status: "watch", compareTo: "no clear evidence for this phase" });
+    expect(v.answers[2]).toMatchObject({ status: "watch", compareTo: "no known change for this phase, so the change from your normal stands" });
     expect(v.overall).toBe("watch");
   });
 

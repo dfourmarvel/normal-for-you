@@ -16,7 +16,7 @@ export const variation: VariationRow[] = [
     cvaPct: 5.45,
     badDirection: "down",
     directionSource:
-      "NASA HRP Immune Evidence Report 2021 (Crucian 2008): lymphocyte percentage fell after short flights (01b §5); direction chosen in advance by the science lead, 14 Nov (02 §3). 01b notes the direction after long flights is not settled.",
+      "NASA HRP Immune Evidence Report 2021 (Crucian 2008): lymphocyte percentage fell after short flights; direction chosen in advance by the science lead, 14 Nov. The direction after long flights is not settled.",
     status: "eflm",
     source:
       "EFLM Biological Variation Database, global meta-analysis (absolute count, ×10⁹/L), read 14 Nov 2026 (01a Table 1); CVA = desirable APS 0.5 × CVI, as in the 01a worked RCV table",
@@ -72,7 +72,7 @@ export const variation: VariationRow[] = [
     cvaPct: 2.45,
     badDirection: "both",
     directionSource:
-      "Both directions clinically bad: ADA 2026 high (≥100 mg/dL) and low (<70 mg/dL) bands (01d §1); 01b §3 says the in-flight direction is mixed",
+      "Both directions clinically bad: ADA 2026 high (≥100 mg/dL) and low (<70 mg/dL) bands; the in-flight direction is mixed in the evidence",
     status: "eflm",
     source:
       "EFLM Biological Variation Database, fasting glucose, 15 datasets / 13 papers, read 14 Nov 2026 (01a Table 2); CVA = desirable APS 0.5 × CVI. EuBIVAS gives CVI 4.7% (01a source 3)",
@@ -84,7 +84,7 @@ export const variation: VariationRow[] = [
     cvaPct: 0,
     badDirection: "both",
     directionSource:
-      "Both directions clinically bad: NEWS2 scores both low and high bands (01d §1); science lead rule, 14 Nov",
+      "Both directions clinically bad: NEWS2 scores both low and high bands; science lead rule, 14 Nov",
     status: "single-study",
     source:
       "Quer et al. 2020, PLOS ONE: Fitbit daily resting HR, 92,457 adults, SD 3.03 bpm at mean 65.5 bpm; the % is 01a's SD ÷ mean; device error included, so CVA 0 (01a Table 2)",
@@ -96,7 +96,7 @@ export const variation: VariationRow[] = [
     cvaPct: 0,
     badDirection: "both",
     directionSource:
-      "Both directions clinically bad: ACC/AHA high bands (01d §1); low blood pressure and fainting at landing (NASA HRP cardiovascular risk page, 01b §1)",
+      "Both directions clinically bad: ACC/AHA high bands; low blood pressure and fainting at landing (NASA HRP cardiovascular risk page)",
     status: "single-study",
     source:
       "Warren et al. 2010, Br J Gen Pract: single office readings 6 weeks apart, 163 adults (about 45% hypertensive or BMI > 27); device error included, so CVA 0 (01a Table 2)",
@@ -108,14 +108,14 @@ export const variation: VariationRow[] = [
     cvaPct: 0,
     badDirection: "both",
     directionSource:
-      "Both directions clinically bad: ACC/AHA high bands (01d §1); low blood pressure and fainting at landing (NASA HRP cardiovascular risk page, 01b §1)",
+      "Both directions clinically bad: ACC/AHA high bands; low blood pressure and fainting at landing (NASA HRP cardiovascular risk page)",
     status: "single-study",
     source:
       "Warren et al. 2010, Br J Gen Pract: single office readings 6 weeks apart, 163 adults; device error included, so CVA 0 (01a Table 2)",
   },
-  ownSD("spo2", "down", "BTS oxygen guideline 2017: any sudden fall of more than 3% needs assessment (01d §1–2)"),
-  ownSD("tempC", "both", "Both directions clinically bad: fever ≥38.0 °C (CDC) and low ≤35.0 °C (NEWS2 score 3) (01d §1–2)"),
-  ownSD("sleepHours", "down", "AASM/SRS 2015: under 7 h regularly is linked to harm (01d §1)"),
+  ownSD("spo2", "down", "BTS oxygen guideline 2017: any sudden fall of more than 3% needs assessment"),
+  ownSD("tempC", "both", "Both directions clinically bad: fever ≥38.0 °C (CDC) and low ≤35.0 °C (NEWS2 score 3)"),
+  ownSD("sleepHours", "down", "AASM/SRS 2015: under 7 h regularly is linked to harm"),
   ownSD("fatigueSP", "up", "Scale definition: higher = worse"),
   ownSD("moodPHQ2", "up", "Scale definition: higher = worse"),
   ownSD("pvtLapses", "up", "Scale definition: higher = worse"),

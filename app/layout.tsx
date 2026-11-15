@@ -14,7 +14,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "BioTensor Q-Health",
   description:
-    "Experimental astronaut health monitoring & decision-support UI — NASA Space Apps 2026 prototype. Simulated data. Not for clinical or flight use.",
+    "Is this reading normal for people, for you, and for this mission day? Tested on NASA Inspiration4 blood counts. Test astronauts are simulated. Not for clinical or flight use.",
 };
 
 const themeBoot = `try{if(localStorage.getItem('biotensor-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark'}}catch(e){}`;

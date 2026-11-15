@@ -1,4 +1,4 @@
-# Normal for you, normal for space
+# BioTensor Q-Health: normal for you, normal for space
 
 Team HFm's entry for NASA Space Apps 2026, "Create Health Monitoring Software for Astronauts on Space Missions".
 

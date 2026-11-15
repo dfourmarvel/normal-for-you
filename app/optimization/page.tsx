@@ -6,7 +6,7 @@ export default function OptimizationPage() {
     <>
       <PageHeader
         title="Optimization"
-        subtitle="Crew exercise scheduling for one week · every number below is computed in your browser"
+        subtitle="Crew exercise scheduling for one week · the plans below are worked out in your browser"
       />
 
       <div

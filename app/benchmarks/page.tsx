@@ -64,7 +64,7 @@ export default function BenchmarksPage() {
             <br />
             ✓ Lower objective preferred
             <br />
-            ✓ Wall-time on identical host
+            ✓ Simulated bifurcation marked “Not built”
             <br />✓ Explicit “quantum-inspired classical” label
           </p>
         </Card>

@@ -3,7 +3,7 @@ import Link from "next/link";
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <Link
-      href="/mission"
+      href="/"
       className={`flex items-center gap-2.5 shrink-0 ${compact ? "min-w-0" : "min-w-[140px]"}`}
       aria-label="BioTensor Q-Health home"
     >

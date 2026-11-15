@@ -34,7 +34,7 @@ export function CheckResults({ result, headingRef, onReport }: { result: CheckRe
         )}
         {result.next === "act" && (
           <button type="button" onClick={onReport} className={`mt-3 min-h-[44px] rounded-full bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover ${FOCUS}`}>
-            Send report to flight surgeon
+            Draft report for flight surgeon
           </button>
         )}
       </div>

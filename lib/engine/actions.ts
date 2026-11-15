@@ -1,6 +1,6 @@
 import type { LimitRow } from "@/lib/data/tables";
 import type { ActionCard, Answer, Reading, Status } from "@/lib/types";
-import { capitalize, fmtNum, INDICATOR_LABEL } from "./format";
+import { capitalize, fmtNum, INDICATOR_LABEL, isAre } from "./format";
 import type { EvalCtx, TodayResult, YouResult } from "./answers";
 import { describeChange } from "./answers";
 
@@ -22,6 +22,7 @@ export function buildAction(i: ActionInput): ActionCard {
   const [people, youA] = answers;
   const label = INDICATOR_LABEL[reading.indicator];
   const val = `${fmtNum(reading.value)} ${reading.unit}`;
+  const be = isAre(reading.indicator);
   const finite = Number.isFinite(reading.value);
 
   if (i.expectedApplied) {
@@ -53,7 +54,7 @@ export function buildAction(i: ActionInput): ActionCard {
     // The message delay to the ground is deliberately left out: spec section 6 wants it cited before it is shown.
     return {
       kind: "actLimit",
-      saw: `${capitalize(label)} is ${val}, ${past}.`,
+      saw: `${capitalize(label)} ${be} ${val}, ${past}.`,
       why: people.compareTo,
       source: people.source,
       doNow: "Follow the response for this limit and report it to the flight surgeon now",
@@ -68,7 +69,7 @@ export function buildAction(i: ActionInput): ActionCard {
     const act = youA.status === "act";
     return {
       kind: "watchDrift",
-      saw: `Your ${label} is ${val}: ${peopleClause}, but ${describeChange(youA.changePct ?? 0)}${rcv}${act ? ", and the previous reading was also past that" : ""}.`,
+      saw: `Your ${label} ${be} ${val}: ${peopleClause}, but ${describeChange(youA.changePct ?? 0)}${rcv}${act ? ", and the previous reading was also past that" : ""}.`,
       why: `A change this size is beyond everyday variation plus measurement noise. ${you.row?.directionSource ?? ""}`.trim(),
       source: youA.source,
       doNow: act ? "Tell the flight surgeon now" : "Re-check at your next scheduled reading; tell the flight surgeon if it moves further",
@@ -80,7 +81,7 @@ export function buildAction(i: ActionInput): ActionCard {
   if (people.status === "watch") {
     return {
       kind: "watchDrift",
-      saw: `Your ${label} is ${val}: outside the normal range for people (${people.compareTo}).`,
+      saw: `Your ${label} ${be} ${val}: outside the normal range for people (${people.compareTo}).`,
       why: "Outside the reference range.",
       source: people.source,
       doNow: "Re-check at your next scheduled reading; tell the flight surgeon if it stays outside",
@@ -91,7 +92,7 @@ export function buildAction(i: ActionInput): ActionCard {
 
   return {
     kind: "watchDrift",
-    saw: `Your ${label} is ${val}: ${describeChange(you.changePct ?? 0)}, which does not match what is expected in ${ctx.phase}.`,
+    saw: `Your ${label} ${be} ${val}: ${describeChange(you.changePct ?? 0)}, which does not match what is expected in ${ctx.phase}.`,
     why: today.answer.compareTo,
     source: today.answer.source,
     doNow: "Re-check at your next scheduled reading; tell the flight surgeon if it moves further",

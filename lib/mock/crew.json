@@ -1,7 +1,7 @@
 {
   "mission": {
     "id": "ISS-EXP-72",
-    "name": "Expedition 72 (simulated)",
+    "name": "Demo mission (simulated)",
     "vehicle": "International Space Station",
     "elapsed_days": 94,
     "remaining_days": 86,

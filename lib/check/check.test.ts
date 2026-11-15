@@ -54,6 +54,7 @@ describe("sample values", () => {
     expect(you.changePct).toBeCloseTo(-30, 0);
     expect(v.reading.value).toBeGreaterThanOrEqual(850);
     expect(result.verdicts[0].reading.indicator).toBe("lymphAbs"); // flagged first
+    expect(v.action.saw).toMatch(/^Your lymphocytes are /);
   });
 
   it("every other reading is nominal on all three questions", () => {

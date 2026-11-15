@@ -22,7 +22,7 @@ export function CrewProfile({ member, mission }: { member: CrewMember; mission?:
           <StatusPill status={member.status}>
             {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
           </StatusPill>
-          <Tag tone="teal">ISS Expedition 72 · simulated</Tag>
+          <Tag tone="teal">Simulated crew</Tag>
         </>
       }
       actions={

@@ -7,14 +7,14 @@ export default function RecommendationsPage() {
     <>
       <PageHeader
         title="Recommendations"
-        subtitle="Constraint-aware countermeasures from SB optimizer · human-in-the-loop"
+        subtitle="Constraint-aware countermeasures · human-in-the-loop · SB optimizer: not built"
         actions={<Button href="/optimization">View solver</Button>}
       />
       <div className="space-y-4">
         <RecommendationCard
           title="Reyes — ARED MSK-R3 at 08:30"
           priority="high"
-          body="Addresses MSK-DECOND-L before high-CO₂ work window. Expected contribution to stress objective: −0.04."
+          body="Addresses MSK-DECOND-L before high-CO₂ work window."
           tags={["Exercise", "45 min", "Hazard: altered gravity"]}
         />
         <RecommendationCard

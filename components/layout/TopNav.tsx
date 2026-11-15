@@ -9,16 +9,17 @@ import { RoleSwitcher } from "@/components/shared/RoleSwitcher";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 const PRIMARY = [
-  { href: "/mission", label: "Overview", match: ["/", "/mission"] },
-  { href: "/astronaut", label: "Astronaut self-check", match: ["/astronaut"] },
+  { href: "/", label: "Check", match: ["/"] },
+  { href: "/proof", label: "Why trust it", match: ["/proof"] },
   { href: "/crew", label: "Crew", match: ["/crew"] },
-  { href: "/health-analysis", label: "Analysis", match: ["/health-analysis"] },
-  { href: "/biological-state", label: "Biological state", match: ["/biological-state"] },
-  { href: "/optimization", label: "Optimization", match: ["/optimization"] },
 ];
 
 const MORE = [
-  { href: "/proof", label: "Proof (NASA data)" },
+  { href: "/mission", label: "Overview" },
+  { href: "/astronaut", label: "Astronaut replays" },
+  { href: "/health-analysis", label: "Analysis" },
+  { href: "/biological-state", label: "Biological state" },
+  { href: "/optimization", label: "Optimization" },
   { href: "/proof/heart-rhythm", label: "Heart rhythm (real data)" },
   { href: "/forecasts", label: "Forecasts" },
   { href: "/recommendations", label: "Recommendations" },
@@ -44,7 +45,8 @@ export function TopNav() {
   const moreRef = useRef<HTMLDivElement>(null);
   // Most specific match wins, so /proof/heart-rhythm doesn't also light up /proof.
   const moreHref = MORE.filter((n) => pathname === n.href || pathname.startsWith(n.href + "/")).sort((a, b) => b.href.length - a.href.length)[0]?.href;
-  const moreActive = moreHref !== undefined;
+  // /proof/heart-rhythm lights "Why trust it"; the More button stays plain when a primary item is already lit.
+  const moreActive = moreHref !== undefined && !PRIMARY.some((n) => isActive(pathname, n.match));
 
   // Close both menus on navigation (React's "reset state when a prop changes" pattern).
   const [menuPath, setMenuPath] = useState(pathname);

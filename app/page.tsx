@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { CheckScreen } from "@/components/check/CheckScreen";
 
 export default function Home() {
-  redirect("/mission");
+  return <CheckScreen />;
 }

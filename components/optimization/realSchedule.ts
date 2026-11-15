@@ -3,6 +3,7 @@ import { TEST_CREW } from "@/lib/testCrew";
 import { buildSchedulerQubo, evaluateQubo, type QuboInput, type QuboModel } from "@/lib/scheduler/qubo";
 import { buildSimpleSchedule, countHardBreaks } from "@/lib/scheduler/simple";
 import { solveSimulatedAnnealing } from "@/lib/scheduler/sa";
+import { solveSimulatedBifurcation } from "@/lib/scheduler/sb";
 import { assignmentsFromBits, solveBruteForce } from "@/lib/scheduler/brute-force";
 import { shelterBlocks } from "@/lib/environment/shelter";
 
@@ -46,7 +47,13 @@ export function weekInput(storm: boolean): QuboInput {
 
 export type Run = { assignments: Assignment[]; penalty: number; hardBreaks: number; ms: number };
 export type WeekRuns = {
-  variables: number; terms: number; buildMs: number; simple: Run; sa: Run; blockedSlots: BlockedSlot[];
+  variables: number;
+  terms: number;
+  buildMs: number;
+  simple: Run;
+  sa: Run;
+  sb: Run;
+  blockedSlots: BlockedSlot[];
   otherSeedRange: number[];
 };
 
@@ -91,8 +98,23 @@ export function runWeek(storm: boolean): WeekRuns {
     ms: saMs,
   };
 
+  const [bifurcated, sbMs] = timed(() => solveSimulatedBifurcation(model, { seed: SA_SEED }));
+  const sbAssignments = assignmentsFromBits(model, bifurcated.bits);
+  const sb: Run = {
+    assignments: sbAssignments,
+    penalty: bifurcated.energy,
+    hardBreaks: countHardBreaks(sbAssignments, input.blockedSlots),
+    ms: sbMs,
+  };
+
   return {
-    variables: model.variables.length, terms: model.quadratic.length, buildMs, simple, sa, blockedSlots: input.blockedSlots,
+    variables: model.variables.length,
+    terms: model.quadratic.length,
+    buildMs,
+    simple,
+    sa,
+    sb,
+    blockedSlots: input.blockedSlots,
     otherSeedRange: OTHER_SEEDS[storm ? "storm" : "normal"],
   };
 }

@@ -1,6 +1,7 @@
 import { Button } from "@/components/shared/Button";
 import { Card } from "@/components/shared/Card";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { SA_SEED, runSmallCase, runWeek } from "@/components/optimization/realSchedule";
 
 export default function BenchmarksPage() {
   // Real scheduler, run once when the page is built; SA uses a fixed seed, so these repeat exactly.

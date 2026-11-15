@@ -85,9 +85,9 @@ Licences read from `package-lock.json`:
 
 ## Use of AI
 
-The concept and the science choices are the team's. The lab-medicine idea (personal baseline plus reference change value) is Daniel's. Claude (Anthropic) was used for research help and code generation under the team's direction. Changes were checked with automated tests and independent AI review. AI-made content carries no NASA logos or mission identifiers.
+The concept and the science choices are the team's. The lab-medicine idea (personal baseline plus reference change value) is Daniel's. In Daniel's parts (the engine, the real-data proof pages, the simulated test astronauts, the astronaut screen and the scheduler screen), Claude (Anthropic) wrote most of the code under his direction and helped find and summarise sources, which were then checked. Changes were checked with automated tests and independent AI review, and the published numbers were recomputed separately. Every number in the app comes from NASA or published data, not from AI. AI-made content carries no NASA logos or mission identifiers.
 
-Other team members: <to be filled>
+Obed (DeeCreates), Ransford (DevBaba) and planet-5: AI use declared in their own words on the team page.
 
 ## Team and licence
 

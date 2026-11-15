@@ -179,7 +179,7 @@ function Results({ people, summary }: { people: Person[]; summary: Summary }) {
       <p className="mt-6 max-w-2xl text-lg font-medium">{headline(summary)}</p>
       <p className="mt-2 max-w-2xl text-sm text-secondary">{chanceSentence(summary)}</p>
       <p className="mt-1 max-w-2xl text-xs text-secondary">
-        We tried four record lengths before choosing whole recordings, so this p-value is not adjusted for that. See Honest limits below.
+        We tried four record lengths before choosing whole recordings; this p-value is not adjusted for that. See Honest limits below.
       </p>
       {summary.failed.length > 0 && (
         <p className="mt-2 max-w-2xl text-sm">

@@ -9,7 +9,7 @@ Every reading an astronaut takes gets three answers: normal for people (referenc
 Real:
 
 - NASA OSDR OSD-569 (Inspiration4) blood counts, shown on `/proof`. Two of the four crew changed by more than their personal reference change value the day after landing, while all 16 post-flight values were inside the lab's normal range. One NASA row had shifted columns; we rebuilt it and disclose the change on the page.
-- PhysioNet Fantasia heartbeat intervals on `/proof/heart-rhythm` (being added; not yet in the repo when this was written, unverified).
+- PhysioNet Fantasia heartbeat intervals (20 young and 20 elderly healthy adults) on `/proof/heart-rhythm`. Sample entropy, worked out in the browser: young median 1.406, elderly 1.277; young higher in 299 of 400 pairs (Mann-Whitney p ≈ 0.0074, not adjusted for the four record lengths we tried). Higher means less predictable, not healthier. Data: `public/data/fantasia-nn.json`, made by `scripts/fantasia-convert.py`.
 
 Simulated:
 
@@ -26,7 +26,7 @@ npm run lint     # eslint
 npm run build    # static site in out/
 ```
 
-There is no server, database or login. (`next.config.ts` and the `out/` output were not re-checked while writing this README; unverified.)
+There is no server, database or login: `next.config.ts` sets `output: "export"`, so the build is a static site in `out/`.
 
 ## Sources and licences
 
@@ -35,7 +35,7 @@ Where a source is cited in the code, the file is given so it can be checked. Cod
 ### Data sets
 
 1. NASA OSDR OSD-569, Inspiration4 complete blood count: https://osdr.nasa.gov/bio/repo/data/studies/OSD-569 (`app/proof/ProofView.tsx:19`, `lib/data/osd569.ts`). Local copy: `public/data/LSDS-7_Complete_Blood_Count_CBC_TRANSFORMED.csv`. Licence terms: not stated in the repo (unverified).
-2. PhysioNet Fantasia database, ODC-By 1.0; Iyengar et al. 1996 and Goldberger et al. 2000 (PhysioNet citation). Source files for this were not in the repo at the time of writing (unverified).
+2. PhysioNet Fantasia Database v1.0.0, https://physionet.org/content/fantasia/1.0.0/ (DOI 10.13026/C2RG61), Open Data Commons Attribution License v1.0. Cite: Iyengar et al. 1996 and Goldberger et al. 2000 (PhysioNet). Converted beat intervals in `public/data/fantasia-nn.json` (`scripts/fantasia-convert.py`); method sources Richman & Moorman 2000, Costa, Goldberger & Peng 2002 (`app/proof/heart-rhythm/HeartRhythmView.tsx`).
 3. EFLM Biological Variation Database, within-person variation (CVI) for white cells, haemoglobin, platelets and fasting glucose, read 14 Nov 2026 (`lib/data/variation.ts`, `lib/testCrew.ts`). © EFLM, not covered by this repo's licence, used with citation, permission requested (header of `lib/data/variation.ts`).
 4. NASA-STD-3001 Vol 2 Rev F (2026-07-14) §6.2.1.3 (`lib/data/limits.ts:12`).
 5. NASA-STD-3001 Vol 1 Rev C (2023-09-15) §4.8 (`lib/data/limits.ts:30`).

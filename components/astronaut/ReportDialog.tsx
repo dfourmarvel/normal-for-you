@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type MouseEvent, type Ref } from "react";
-import { SEND_DELAY } from "@/app/astronaut/model";
 import { FOCUS } from "./StatusChip";
 
 export interface Report { title: string; text: string }
@@ -30,7 +29,6 @@ export function ReportDialog({ ref, report }: { ref: Ref<HTMLDialogElement>; rep
         <pre className="mt-3 max-h-[55vh] overflow-auto rounded-xl border border-border-soft bg-card-muted p-3 font-sans text-xs whitespace-pre-wrap [overflow-wrap:anywhere]">
           {report?.text}
         </pre>
-        <p className="mt-2 text-xs text-secondary">{SEND_DELAY}.</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button type="button" onClick={copy} className={`min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover ${FOCUS}`}>
             Copy report

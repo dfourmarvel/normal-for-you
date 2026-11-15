@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 const PRIMARY = [
   { href: "/mission", label: "Overview", match: ["/", "/mission"] },
+  { href: "/astronaut", label: "Astronaut self-check", match: ["/astronaut"] },
   { href: "/crew", label: "Crew", match: ["/crew"] },
   { href: "/health-analysis", label: "Analysis", match: ["/health-analysis"] },
   { href: "/biological-state", label: "Biological state", match: ["/biological-state"] },

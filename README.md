@@ -60,7 +60,7 @@ Teammates, in their own words (15 Nov):
 - planet-5:
   - **Corrected:** Removed unsupported mission risk cues and fabricated crew-status counts. Withheld fixed forecasts, recommendations, health and biological-state analytics, fictional crew findings, and countermeasures where they were not derived from individual observations or validated models. This prevents simulated outputs from being mistaken for operational assessments.
   - **Corrected:** Changed environmental screening to report missing reference criteria as unknown and to distinguish missing criteria from an invalid reading. This prevents an unsupported normal status and directs users toward the appropriate data correction.
-  - **Added:** Clear descriptions of simulated environmental and scenario inputs, unavailable capabilities, and the unvalidated combined-drift heuristic. These disclosures make the evidence and limitations visible while retaining access to the existing personal-baseline demonstration and real-data proof pages.
+  - **Added:** Clear descriptions of simulated environmental and scenario inputs, unavailable capabilities, and the unvalidated combined-drift heuristic. These disclosures make the evidence and limitations visible while retaining access to the existing personal-baseline demonstration and real-data proof pages. (With Microsoft365 Copilot and VS Code Copilot assistance)
 
 ## Team
 
